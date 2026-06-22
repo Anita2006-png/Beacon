@@ -1,26 +1,131 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Beacon design system (BUILD_SPEC §10.3).
+ * Primary = teal. Warm stone neutrals (never pure black/white). Status colours
+ * are a separate semantic set and must ALWAYS be paired with an icon + text
+ * label in the UI — never colour alone.
+ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
+  /* Brand — teal */
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488; /* brand */
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
+  --color-primary-950: #042f2e;
+
+  /* Warm neutrals (stone) */
+  --color-background: #fafaf9;
+  --color-foreground: #1c1917;
+  --color-card: #ffffff;
+  --color-card-foreground: #1c1917;
+  --color-muted: #f5f5f4;
+  --color-muted-foreground: #57534e;
+  --color-border: #e7e5e4;
+  --color-input: #e7e5e4;
+  --color-ring: #0d9488;
+
+  /* Status — ALWAYS with icon + text */
+  --color-critical: #dc2626;
+  --color-critical-foreground: #ffffff;
+  --color-caution: #d97706;
+  --color-caution-foreground: #ffffff;
+  --color-safe: #059669;
+  --color-safe-foreground: #ffffff;
+  --color-info: #2563eb;
+  --color-info-foreground: #ffffff;
+
+  --color-primary: var(--color-primary-600);
+  --color-primary-foreground: #ffffff;
+
+  /* Fonts (wired in layout.tsx) */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Type scale (rem) — BUILD_SPEC §10.4 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  --radius: 0.625rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.dark {
+  --color-background: #0c0a09;
+  --color-foreground: #fafaf9;
+  --color-card: #1c1917;
+  --color-card-foreground: #fafaf9;
+  --color-muted: #292524;
+  --color-muted-foreground: #a8a29e;
+  --color-border: #292524;
+  --color-input: #292524;
+  --color-ring: #14b8a6;
+
+  --color-primary: var(--color-primary-500);
+
+  /* Brighten status one step for dark-mode contrast */
+  --color-critical: #ef4444;
+  --color-caution: #f59e0b;
+  --color-safe: #10b981;
+  --color-info: #3b82f6;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans), system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  /* Tabular figures on all vitals/numeric fields (BUILD_SPEC §10.4). */
+  .tabular {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+  /* Visible keyboard focus everywhere (WCAG 2.2). */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Respect reduced motion (BUILD_SPEC §10.2/§10.6). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Restrained triage-card entrance (≤200ms, staggered). */
+@keyframes beacon-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.beacon-rise {
+  animation: beacon-rise 180ms ease-out both;
 }
