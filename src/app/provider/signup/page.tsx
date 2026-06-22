@@ -4,6 +4,12 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+export const metadata = {
+  title: "Provider registration",
+  description:
+    "Healthcare providers: register for Beacon to access patients' emergency medical information once approved.",
+};
+
 export default function ProviderSignupPage() {
   return (
     <AuthShell

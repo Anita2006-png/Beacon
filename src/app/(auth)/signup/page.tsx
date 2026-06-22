@@ -2,6 +2,12 @@ import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthForm } from "@/components/auth/auth-form";
 
+export const metadata = {
+  title: "Create your health passport",
+  description:
+    "Sign up to store your blood group, allergies, medications and emergency contacts — encrypted and ready when it matters.",
+};
+
 export default function SignupPage() {
   return (
     <AuthShell

@@ -15,6 +15,11 @@ import { ApproveButton } from "@/components/admin/approve-button";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Provider approvals",
+  robots: { index: false, follow: false },
+};
+
 function formatWhen(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
     dateStyle: "medium",

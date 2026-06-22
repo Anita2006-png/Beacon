@@ -13,6 +13,11 @@ import { Brand } from "@/components/brand";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
 
+export const metadata = {
+  title: "Provider home",
+  robots: { index: false, follow: false },
+};
+
 export default async function ProviderHomePage() {
   const session = await getCurrentProfile();
   if (!session) redirect("/provider/login");

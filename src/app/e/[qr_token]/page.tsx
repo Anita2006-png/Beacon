@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchX, ShieldAlert, Clock } from "lucide-react";
+
+// Sensitive — must never be crawled or indexed.
+export const metadata: Metadata = {
+  title: "Emergency view",
+  robots: { index: false, follow: false, nocache: true },
+};
 import { getCurrentProfile, isApprovedProvider } from "@/lib/auth";
 import { tokenExists, readEmergencyProfile } from "@/lib/emergency";
 import { checkRateLimit } from "@/lib/rate-limit";

@@ -4,6 +4,8 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+export const metadata = { title: "Sign in" };
+
 export default async function LoginPage({
   searchParams,
 }: {

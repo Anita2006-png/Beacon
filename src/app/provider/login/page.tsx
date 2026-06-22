@@ -2,6 +2,8 @@ import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthForm } from "@/components/auth/auth-form";
 
+export const metadata = { title: "Provider sign in" };
+
 export default async function ProviderLoginPage({
   searchParams,
 }: {

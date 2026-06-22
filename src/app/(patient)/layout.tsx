@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth";
 import { Brand } from "@/components/brand";
 import { SignOutButton } from "@/components/sign-out-button";
 import { PatientNav } from "@/components/patient/patient-nav";
+
+// Private area — never index.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function PatientLayout({
   children,
