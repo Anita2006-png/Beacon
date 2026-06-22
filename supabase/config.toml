@@ -1,0 +1,26 @@
+# Beacon — Supabase project config.
+# Unspecified sections fall back to CLI defaults. The auth email templates below
+# are the editable source of truth; apply them to the linked project with:
+#   pnpm supabase config push
+project_id = "yxbpqjlaoqzbztbzcqyk"
+
+[auth]
+# Where confirmation / magic links send users back to.
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+
+[auth.email]
+# Set to false during the demo for frictionless sign-in; true once SMTP is wired.
+enable_confirmations = true
+
+[auth.email.template.confirmation]
+subject = "Confirm your Beacon email"
+content_path = "./templates/confirm-signup.html"
+
+[auth.email.template.magic_link]
+subject = "Your Beacon sign-in link"
+content_path = "./templates/magic-link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Beacon password"
+content_path = "./templates/reset-password.html"

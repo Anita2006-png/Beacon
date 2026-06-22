@@ -1,12 +1,15 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { credentialsSchema, signupSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export interface AuthState {
   error?: string;
+  /** Set by requestPasswordReset — always true so we never reveal if the email exists. */
+  sent?: boolean;
 }
 
 /** Sign up a patient or provider. Role comes from a hidden form field. */
@@ -97,4 +100,48 @@ export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+/** Send a password-reset email. Always reports success (no email enumeration). */
+export async function requestPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  await checkRateLimit(`reset:${formData.get("email") ?? "unknown"}`, 5);
+
+  const parsed = z.email().safeParse(formData.get("email"));
+  if (parsed.success) {
+    const supabase = await createClient();
+    const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+    await supabase.auth.resetPasswordForEmail(parsed.data, {
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    });
+  }
+  return { sent: true };
+}
+
+/** Set a new password using the recovery session established by the email link. */
+export async function updatePassword(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) {
+    return { error: "Use at least 8 characters." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Your reset link has expired. Please request a new one." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    return { error: "We couldn't update your password. Please try again." };
+  }
+
+  redirect("/dashboard");
 }

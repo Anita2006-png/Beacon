@@ -103,6 +103,11 @@ create policy "profiles_update_own"
   using (id = auth.uid())
   with check (id = auth.uid());
 
+-- Safety net for self-provisioning a profile if the trigger didn't fire.
+create policy "profiles_insert_own"
+  on public.profiles for insert
+  with check (id = auth.uid());
+
 -- medical_profiles: a patient has full CRUD over only their own record.
 -- There is deliberately NO provider read policy — providers never read patient
 -- data through the normal client; the privileged server path handles that.

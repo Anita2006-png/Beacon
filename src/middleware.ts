@@ -44,9 +44,15 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh the session and verify the user (never trust the cookie blindly).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Guard against transient network failures reaching Supabase so a blip can't
+  // 500 the whole app — degrade to "no verified user" instead.
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
 
   const { pathname, search } = request.nextUrl;
 
