@@ -56,12 +56,16 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <div className="mb-6 flex items-center gap-2 text-primary">
-        <Users className="size-6" />
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <header className="beacon-rise mb-7">
+        <span className="data-label text-primary-400">Administration</span>
+        <h1 className="font-display mt-1 flex items-center gap-2 text-3xl font-semibold tracking-tight text-foreground">
+          <Users className="size-7 text-primary" />
           Provider approvals
         </h1>
-      </div>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Review and approve providers before they can open emergency records.
+        </p>
+      </header>
 
       <Card>
         <CardHeader>

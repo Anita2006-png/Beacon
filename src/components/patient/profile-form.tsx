@@ -23,22 +23,31 @@ import {
 } from "@/components/ui/select";
 
 function Section({
+  n,
   icon,
   title,
   description,
   children,
 }: {
+  n: string;
   icon: React.ReactNode;
   title: string;
   description: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[var(--radius)] border border-border bg-card p-6">
-      <div className="mb-4 flex items-start gap-3">
-        <span className="mt-0.5 text-primary">{icon}</span>
-        <div>
-          <h2 className="font-semibold tracking-tight">{title}</h2>
+    <section className="surface p-6">
+      <div className="mb-5 flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary-700">
+          {icon}
+        </span>
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold tracking-tight">
+              {title}
+            </h2>
+            <span className="data-label text-primary-300">{n}</span>
+          </div>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
@@ -51,7 +60,7 @@ function SaveButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="lg" disabled={pending}>
-      {pending ? "Saving…" : "Save profile"}
+      {pending ? "Saving…" : "Save passport"}
     </Button>
   );
 }
@@ -76,6 +85,7 @@ export function ProfileForm({
       )}
 
       <Section
+        n="01"
         icon={<Droplet className="size-5" />}
         title="Blood group"
         description="Shown first in an emergency."
@@ -101,6 +111,7 @@ export function ProfileForm({
       </Section>
 
       <Section
+        n="02"
         icon={<TriangleAlert className="size-5" />}
         title="Allergies"
         description="List anything you're allergic to — medicines, foods, materials."
@@ -120,6 +131,7 @@ export function ProfileForm({
       </Section>
 
       <Section
+        n="03"
         icon={<Pill className="size-5" />}
         title="Current medications"
         description="Medicines you take regularly, with doses if you know them."
@@ -136,6 +148,7 @@ export function ProfileForm({
       </Section>
 
       <Section
+        n="04"
         icon={<Stethoscope className="size-5" />}
         title="Medical conditions"
         description="Ongoing conditions a clinician should know about."
@@ -152,6 +165,7 @@ export function ProfileForm({
       </Section>
 
       <Section
+        n="05"
         icon={<UserRound className="size-5" />}
         title="Emergency contact"
         description="Someone we can point a responder to."
@@ -179,7 +193,10 @@ export function ProfileForm({
         </div>
       </Section>
 
-      <div className="flex items-center gap-3">
+      <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 px-5 py-3 shadow-lg backdrop-blur-md">
+        <p className="hidden text-sm text-muted-foreground sm:block">
+          Your sensitive fields are encrypted before saving.
+        </p>
         <SaveButton />
       </div>
     </form>

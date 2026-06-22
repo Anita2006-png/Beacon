@@ -92,7 +92,7 @@ export default async function EmergencyPage({
   }
 
   return (
-    <main className="min-h-dvh px-4 py-8">
+    <main className="min-h-dvh bg-muted/40 px-4 py-6 sm:py-10">
       <TriageCard data={data} />
     </main>
   );

@@ -1,10 +1,14 @@
 @import "tailwindcss";
 
 /*
- * Beacon design system (BUILD_SPEC §10.3).
- * Primary = teal. Warm stone neutrals (never pure black/white). Status colours
- * are a separate semantic set and must ALWAYS be paired with an icon + text
- * label in the UI — never colour alone.
+ * Beacon design system — "the health passport as a crafted document."
+ * Aesthetic: clinical-editorial. Warm canvas, confident teal, a Fraunces
+ * display serif, monospaced passport-style data fields, and a quiet guilloché
+ * security texture. Patient mode is calm; the emergency ID is stark and bold.
+ *
+ * Accessibility is non-negotiable (BUILD_SPEC §10): status is never colour
+ * alone (always + icon + label), red is reserved for criticals, contrast meets
+ * WCAG AA, vitals use tabular figures, motion respects prefers-reduced-motion.
  */
 
 @theme {
@@ -21,33 +25,34 @@
   --color-primary-900: #134e4a;
   --color-primary-950: #042f2e;
 
-  /* Warm neutrals (stone) */
-  --color-background: #fafaf9;
-  --color-foreground: #1c1917;
-  --color-card: #ffffff;
-  --color-card-foreground: #1c1917;
-  --color-muted: #f5f5f4;
-  --color-muted-foreground: #57534e;
-  --color-border: #e7e5e4;
-  --color-input: #e7e5e4;
+  /* Warm neutrals (stone) — never pure black/white */
+  --color-background: #f7f5f1; /* warm paper */
+  --color-foreground: #1a1714;
+  --color-card: #fffefb;
+  --color-card-foreground: #1a1714;
+  --color-muted: #f0ede7;
+  --color-muted-foreground: #5b554d;
+  --color-border: #e4dfd6;
+  --color-input: #e4dfd6;
   --color-ring: #0d9488;
 
-  /* Status — ALWAYS with icon + text */
-  --color-critical: #dc2626;
+  /* Status — ALWAYS paired with icon + text label */
+  --color-critical: #c81e1e;
   --color-critical-foreground: #ffffff;
-  --color-caution: #d97706;
+  --color-caution: #b45309;
   --color-caution-foreground: #ffffff;
-  --color-safe: #059669;
+  --color-safe: #047857;
   --color-safe-foreground: #ffffff;
-  --color-info: #2563eb;
+  --color-info: #1d4ed8;
   --color-info-foreground: #ffffff;
 
   --color-primary: var(--color-primary-600);
   --color-primary-foreground: #ffffff;
 
-  /* Fonts (wired in layout.tsx) */
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 
   /* Type scale (rem) — BUILD_SPEC §10.4 */
   --text-xs: 0.75rem;
@@ -59,27 +64,39 @@
   --text-3xl: 2rem;
   --text-4xl: 2.5rem;
 
-  --radius: 0.625rem;
+  --radius: 1rem;
+
+  /* Layered, warm-tinted shadows */
+  --shadow-soft: 0 1px 2px rgba(26, 23, 20, 0.04),
+    0 4px 16px rgba(26, 23, 20, 0.05);
+  --shadow-lift: 0 2px 4px rgba(26, 23, 20, 0.05),
+    0 12px 32px -8px rgba(26, 23, 20, 0.12);
+  --shadow-ring: 0 0 0 1px var(--color-border), var(--shadow-soft);
 }
 
 .dark {
   --color-background: #0c0a09;
-  --color-foreground: #fafaf9;
-  --color-card: #1c1917;
-  --color-card-foreground: #fafaf9;
-  --color-muted: #292524;
-  --color-muted-foreground: #a8a29e;
-  --color-border: #292524;
-  --color-input: #292524;
-  --color-ring: #14b8a6;
+  --color-foreground: #f5f1ea;
+  --color-card: #1a1714;
+  --color-card-foreground: #f5f1ea;
+  --color-muted: #262220;
+  --color-muted-foreground: #a8a097;
+  --color-border: #2c2825;
+  --color-input: #2c2825;
+  --color-ring: #2dd4bf;
 
-  --color-primary: var(--color-primary-500);
+  --color-primary: var(--color-primary-400);
 
   /* Brighten status one step for dark-mode contrast */
-  --color-critical: #ef4444;
+  --color-critical: #f05252;
   --color-caution: #f59e0b;
-  --color-safe: #10b981;
-  --color-info: #3b82f6;
+  --color-safe: #0e9f6e;
+  --color-info: #3f6fff;
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 12px 32px -8px rgba(0, 0, 0, 0.6);
+  --shadow-ring: 0 0 0 1px var(--color-border), var(--shadow-soft);
 }
 
 @layer base {
@@ -91,6 +108,13 @@
     color: var(--color-foreground);
     font-family: var(--font-sans), system-ui, sans-serif;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Editorial display serif with warm optical sizing. */
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
   }
   /* Tabular figures on all vitals/numeric fields (BUILD_SPEC §10.4). */
   .tabular {
@@ -101,7 +125,154 @@
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
+    border-radius: 4px;
   }
+}
+
+@layer components {
+  /*
+   * Passport "data field": a tiny uppercase label over a value, the way an
+   * official document presents information. Doubles as the spec's required
+   * tabular figures for vitals.
+   */
+  .data-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+    font-family: var(--font-mono), monospace;
+  }
+  .data-value {
+    font-family: var(--font-mono), monospace;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+    color: var(--color-foreground);
+  }
+
+  /* Card surfaces with a refined ring + soft lift. */
+  .surface {
+    background-color: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-ring);
+  }
+  .surface-lift {
+    background-color: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@layer utilities {
+  /* Warm teal aurora — atmospheric backdrop for hero / auth surfaces. */
+  .bg-aurora {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(
+        40rem 30rem at 12% -8%,
+        color-mix(in oklab, var(--color-primary-300) 55%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        36rem 28rem at 105% 8%,
+        color-mix(in oklab, var(--color-primary-500) 32%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        30rem 30rem at 80% 110%,
+        color-mix(in oklab, var(--color-primary-200) 45%, transparent),
+        transparent 60%
+      );
+  }
+
+  /* Guilloché-style security texture, like currency / passports. Very quiet. */
+  .bg-guilloche {
+    background-image: repeating-radial-gradient(
+      circle at 50% 50%,
+      color-mix(in oklab, var(--color-primary-700) 7%, transparent) 0 1px,
+      transparent 1px 9px
+    );
+  }
+
+  /* Fine paper grain to kill flatness. */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+  }
+
+  /* Gradient text for the brand wordmark / display accents. */
+  .text-brand-gradient {
+    background-image: linear-gradient(
+      105deg,
+      var(--color-primary-700),
+      var(--color-primary-500) 55%,
+      var(--color-primary-400)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Perforated edge — the torn-ticket / ID-card motif. */
+  .perforation {
+    position: relative;
+  }
+  .perforation::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 14px;
+    background-image: radial-gradient(
+      circle at 9px 50%,
+      transparent 0 5px,
+      var(--color-card) 5px
+    );
+    background-size: 18px 14px;
+    background-repeat: repeat-x;
+  }
+
+  /* Hairline dotted divider, document-style. */
+  .rule-dotted {
+    border-top: 1px dashed var(--color-border);
+  }
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────── */
+@keyframes beacon-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.beacon-rise {
+  animation: beacon-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes beacon-stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.6);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+}
+.beacon-stamp {
+  animation: beacon-stamp 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* Respect reduced motion (BUILD_SPEC §10.2/§10.6). */
@@ -113,19 +284,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .grain::after {
+    display: none;
+  }
 }
 
-/* Restrained triage-card entrance (≤200ms, staggered). */
-@keyframes beacon-rise {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+@media print {
+  .grain::after,
+  .bg-aurora,
+  .bg-guilloche {
+    background: none !important;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.beacon-rise {
-  animation: beacon-rise 180ms ease-out both;
 }

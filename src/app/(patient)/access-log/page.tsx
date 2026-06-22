@@ -29,12 +29,15 @@ export default async function AccessLogPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Access log</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <header className="beacon-rise">
+        <span className="data-label text-primary-400">Audit trail</span>
+        <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">
+          Access log
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           A record of every time your emergency information was opened.
         </p>
-      </div>
+      </header>
 
       {rows.length === 0 ? (
         <Card>
