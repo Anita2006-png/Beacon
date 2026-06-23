@@ -5,6 +5,7 @@ import { getOwnMedicalProfile } from "@/lib/medical";
 import { emergencyUrl, qrDataUrl } from "@/lib/qr";
 import { Button } from "@/components/ui/button";
 import { QrActions } from "@/components/patient/qr-actions";
+import { EmergencyAccessToggle } from "@/components/patient/emergency-access-toggle";
 
 export default async function QrPage() {
   const profile = await getOwnMedicalProfile();
@@ -75,7 +76,8 @@ export default async function QrPage() {
         </div>
       </div>
 
-      <div className="print:hidden">
+      <div className="print:hidden flex flex-col gap-5">
+        <EmergencyAccessToggle enabled={profile.emergency_access_enabled} />
         <QrActions dataUrl={dataUrl} />
       </div>
     </div>

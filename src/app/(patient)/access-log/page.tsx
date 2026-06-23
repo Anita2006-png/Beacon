@@ -22,7 +22,7 @@ export default async function AccessLogPage() {
   const supabase = await createClient();
   const { data: logs } = await supabase
     .from("access_logs")
-    .select("id, access_type, created_at")
+    .select("id, access_type, created_at, accessor_name, accessor_email")
     .order("created_at", { ascending: false });
 
   const rows = logs ?? [];
@@ -63,7 +63,18 @@ export default async function AccessLogPage() {
                   <TableBody>
                     {rows.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell>A verified provider</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-foreground">
+                              {log.accessor_name || "A verified provider"}
+                            </span>
+                            {log.accessor_email && (
+                              <span className="tabular text-xs text-muted-foreground">
+                                {log.accessor_email}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge variant="info">
                             <ShieldCheck />
@@ -90,9 +101,14 @@ export default async function AccessLogPage() {
                       <ShieldCheck />
                       Emergency view
                     </Badge>
-                    <span className="text-sm text-foreground">
-                      A verified provider
+                    <span className="text-sm font-medium text-foreground">
+                      {log.accessor_name || "A verified provider"}
                     </span>
+                    {log.accessor_email && (
+                      <span className="tabular text-xs text-muted-foreground">
+                        {log.accessor_email}
+                      </span>
+                    )}
                     <span className="tabular text-sm text-muted-foreground">
                       {formatWhen(log.created_at)}
                     </span>

@@ -34,11 +34,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const view = await readEmergencyProfile(token, session.user.id);
-  if (!view) {
+  const result = await readEmergencyProfile(token, {
+    id: session.user.id,
+    name: session.profile.full_name,
+    email: session.user.email ?? null,
+  });
+
+  if (result.status === "disabled") {
+    return NextResponse.json(
+      { error: "Emergency access is paused by the patient" },
+      { status: 403 },
+    );
+  }
+  if (result.status === "not_found") {
     // Same response shape for any unknown token.
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json(view, { status: 200 });
+  return NextResponse.json(result.view, { status: 200 });
 }

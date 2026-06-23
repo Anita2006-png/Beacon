@@ -21,10 +21,21 @@ export default async function PatientLayout({
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3">
-          <Brand href="/dashboard" />
-          <PatientNav />
-          <SignOutButton />
+        <div className="mx-auto w-full max-w-5xl px-4 sm:px-5">
+          {/* Row 1: brand + sign out always pinned; nav inline on desktop */}
+          <div className="flex items-center justify-between gap-3 py-3">
+            <Brand href="/dashboard" className="shrink-0" />
+            <div className="hidden min-w-0 flex-1 justify-center md:flex">
+              <PatientNav />
+            </div>
+            <div className="shrink-0">
+              <SignOutButton />
+            </div>
+          </div>
+          {/* Row 2: scrollable nav on mobile only */}
+          <div className="-mx-4 border-t border-border px-4 pb-2 pt-2 md:hidden">
+            <PatientNav />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-10">

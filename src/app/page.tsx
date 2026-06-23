@@ -3,12 +3,14 @@ import {
   ArrowRight,
   Droplet,
   HeartPulse,
+  LayoutDashboard,
   Lock,
   QrCode,
   ScrollText,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
+import { getCurrentProfile } from "@/lib/auth";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 
@@ -33,7 +35,12 @@ const FEATURES = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getCurrentProfile();
+  const isProvider = session?.profile.role === "provider";
+  const homeHref = isProvider ? "/provider" : "/dashboard";
+  const homeLabel = isProvider ? "Provider home" : "Dashboard";
+
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-aurora">
       <div className="grain absolute inset-0" aria-hidden />
@@ -43,12 +50,23 @@ export default function LandingPage() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
           <Brand href="/" showCaption />
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/signup">Get started</Link>
-            </Button>
+            {session ? (
+              <Button asChild size="sm">
+                <Link href={homeHref}>
+                  <LayoutDashboard />
+                  {homeLabel}
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/login">Sign in</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href="/signup">Get started</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -72,18 +90,29 @@ export default function LandingPage() {
               shared only with people you can trust.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href="/signup">
-                  Create your passport
-                  <ArrowRight />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/provider/signup">
-                  <ShieldCheck />
-                  I&apos;m a provider
-                </Link>
-              </Button>
+              {session ? (
+                <Button asChild size="lg">
+                  <Link href={homeHref}>
+                    Go to {homeLabel.toLowerCase()}
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild size="lg">
+                    <Link href="/signup">
+                      Create your passport
+                      <ArrowRight />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/provider/signup">
+                      <ShieldCheck />
+                      I&apos;m a provider
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
             <p className="mt-6 text-sm text-muted-foreground">
               Free to set up · Encrypted end to end · You control every access

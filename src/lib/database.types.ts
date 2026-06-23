@@ -8,6 +8,12 @@
 
 export type UserRole = "patient" | "provider";
 export type ProviderStatus = "none" | "pending" | "approved";
+export type Sex =
+  | "female"
+  | "male"
+  | "intersex"
+  | "prefer_not_to_say"
+  | "unknown";
 export type BloodGroup =
   | "A+"
   | "A-"
@@ -43,6 +49,18 @@ export type MedicalProfileRow = {
   emergency_contact_phone: string | null;
   qr_token: string;
   updated_at: string;
+  // 0002_extend
+  emergency_access_enabled: boolean;
+  date_of_birth: string | null;
+  sex: Sex | null;
+  organ_donor: boolean | null;
+  additional_notes: string | null;
+  emergency_contact_relationship: string | null;
+  emergency_contact_2_name: string | null;
+  emergency_contact_2_phone: string | null;
+  emergency_contact_2_relationship: string | null;
+  primary_physician_name: string | null;
+  primary_physician_phone: string | null;
 };
 
 export type AccessLogRow = {
@@ -51,6 +69,8 @@ export type AccessLogRow = {
   patient_id: string;
   access_type: string;
   created_at: string;
+  accessor_name: string | null;
+  accessor_email: string | null;
 };
 
 export interface Database {

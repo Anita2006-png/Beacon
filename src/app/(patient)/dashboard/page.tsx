@@ -80,7 +80,7 @@ export default async function DashboardPage({
   const { data: logs } = profile
     ? await supabase
         .from("access_logs")
-        .select("id, access_type, created_at")
+        .select("id, access_type, created_at, accessor_name")
         .order("created_at", { ascending: false })
         .limit(5)
     : { data: [] };
@@ -219,7 +219,9 @@ export default async function DashboardPage({
                   <ShieldCheck className="size-4" />
                 </span>
                 <span className="flex-1 text-sm text-foreground">
-                  Emergency view by a verified provider
+                  {log.accessor_name
+                    ? `Emergency view by ${log.accessor_name}`
+                    : "Emergency view by a verified provider"}
                 </span>
                 <span className="data-value text-sm text-muted-foreground">
                   {formatWhen(log.created_at)}

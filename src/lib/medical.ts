@@ -22,11 +22,12 @@ export async function getOwnMedicalProfile(): Promise<MedicalProfileRow | null> 
 
 export interface DecryptedMedicalProfile extends Omit<
   MedicalProfileRow,
-  "allergies" | "medications" | "medical_conditions"
+  "allergies" | "medications" | "medical_conditions" | "additional_notes"
 > {
   allergies: string;
   medications: string;
   medical_conditions: string;
+  additional_notes: string;
 }
 
 /**
@@ -38,13 +39,21 @@ export async function getOwnMedicalProfileDecrypted(): Promise<DecryptedMedicalP
   const row = await getOwnMedicalProfile();
   if (!row) return null;
 
-  const [allergies, medications, medical_conditions] = await Promise.all([
-    decryptField(row.allergies),
-    decryptField(row.medications),
-    decryptField(row.medical_conditions),
-  ]);
+  const [allergies, medications, medical_conditions, additional_notes] =
+    await Promise.all([
+      decryptField(row.allergies),
+      decryptField(row.medications),
+      decryptField(row.medical_conditions),
+      decryptField(row.additional_notes),
+    ]);
 
-  return { ...row, allergies, medications, medical_conditions };
+  return {
+    ...row,
+    allergies,
+    medications,
+    medical_conditions,
+    additional_notes,
+  };
 }
 
 /** Profile completeness for the dashboard "is my passport ready?" answer. */

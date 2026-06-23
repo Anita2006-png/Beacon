@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SearchX, ShieldAlert, Clock } from "lucide-react";
+import { SearchX, ShieldAlert, ShieldOff, Clock } from "lucide-react";
 
 // Sensitive — must never be crawled or indexed.
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 import { getCurrentProfile, isApprovedProvider } from "@/lib/auth";
-import { tokenExists, readEmergencyProfile } from "@/lib/emergency";
+import { readEmergencyProfile } from "@/lib/emergency";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { TriageCard } from "@/components/emergency/triage-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -73,14 +73,33 @@ export default async function EmergencyPage({
     );
   }
 
-  // Token check + privileged read + audit log. Unknown token → identical
-  // friendly 404-style response, no info leak (BUILD_SPEC §7.2).
-  const exists = await tokenExists(qr_token);
-  const data = exists
-    ? await readEmergencyProfile(qr_token, session.user.id)
-    : null;
+  // Privileged read + audit log + notification. Captures who accessed it.
+  // Unknown token → identical friendly 404-style response, no info leak (§7.2).
+  const result = await readEmergencyProfile(qr_token, {
+    id: session.user.id,
+    name: session.profile.full_name,
+    email: session.user.email ?? null,
+  });
 
-  if (!data) {
+  if (result.status === "disabled") {
+    return (
+      <Notice>
+        <Alert variant="caution">
+          <ShieldOff />
+          <AlertTitle>Emergency access is paused</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3">
+            This person has temporarily turned off emergency access to their
+            record. Please use another way to obtain their information.
+            <Button asChild variant="outline" className="w-fit">
+              <Link href="/provider">Back to provider home</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </Notice>
+    );
+  }
+
+  if (result.status === "not_found") {
     return (
       <Notice>
         <Alert variant="default">
@@ -100,7 +119,7 @@ export default async function EmergencyPage({
 
   return (
     <main className="min-h-dvh bg-muted/40 px-4 py-6 sm:py-10">
-      <TriageCard data={data} />
+      <TriageCard data={result.view} />
     </main>
   );
 }

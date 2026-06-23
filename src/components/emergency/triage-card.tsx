@@ -1,17 +1,19 @@
 import {
   Droplet,
+  HeartHandshake,
   HeartPulse,
+  NotebookPen,
   Phone,
   Pill,
   ShieldCheck,
   Stethoscope,
   TriangleAlert,
 } from "lucide-react";
-import type { EmergencyView } from "@/lib/emergency";
+import type { EmergencyContact, EmergencyView } from "@/lib/emergency";
+import type { Sex } from "@/lib/database.types";
 
 function rise(index: number): React.CSSProperties {
-  // Staggered ≤... entrance; disabled under prefers-reduced-motion (globals).
-  return { animationDelay: `${index * 70}ms` };
+  return { animationDelay: `${index * 60}ms` };
 }
 
 function formatTime(iso: string): string {
@@ -21,13 +23,35 @@ function formatTime(iso: string): string {
   });
 }
 
+const SEX_LABELS: Record<Sex, string> = {
+  female: "Female",
+  male: "Male",
+  intersex: "Intersex",
+  prefer_not_to_say: "—",
+  unknown: "—",
+};
+
+function ageFrom(dob: string | null): number | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  return a >= 0 && a < 140 ? a : null;
+}
+
 export function TriageCard({ data }: { data: EmergencyView }) {
   const hasAllergies = data.allergies.trim().length > 0;
+  const age = ageFrom(data.date_of_birth);
+  const sexLabel = data.sex ? SEX_LABELS[data.sex] : null;
+  const organ =
+    data.organ_donor === true ? "Yes" : data.organ_donor === false ? "No" : "—";
 
   return (
     <div className="mx-auto w-full max-w-xl">
       <div className="surface-lift bg-guilloche overflow-hidden">
-        {/* Official header band */}
         <header
           className="beacon-rise flex items-center justify-between bg-gradient-to-r from-primary-800 to-primary-600 px-6 py-4 text-primary-foreground"
           style={rise(0)}
@@ -51,7 +75,7 @@ export function TriageCard({ data }: { data: EmergencyView }) {
             </div>
           )}
 
-          {/* 1 — ALLERGIES: the loudest element when present. */}
+          {/* 1 — ALLERGIES: loudest when present */}
           <section
             className={`beacon-rise rounded-2xl border-2 p-5 ${
               hasAllergies
@@ -98,10 +122,31 @@ export function TriageCard({ data }: { data: EmergencyView }) {
             </p>
           </section>
 
+          {/* About strip: age / sex / organ donor */}
+          <section
+            className="beacon-rise mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-border bg-card p-5"
+            style={rise(4)}
+          >
+            <div>
+              <span className="data-label">Age</span>
+              <p className="data-value mt-0.5 text-xl text-foreground">
+                {age ?? "—"}
+              </p>
+            </div>
+            <div>
+              <span className="data-label">Sex</span>
+              <p className="mt-0.5 text-xl text-foreground">{sexLabel ?? "—"}</p>
+            </div>
+            <div>
+              <span className="data-label">Organ donor</span>
+              <p className="mt-0.5 text-xl text-foreground">{organ}</p>
+            </div>
+          </section>
+
           {/* 3 & 4 — MEDICATIONS / CONDITIONS */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Block
-              index={4}
+              index={5}
               icon={<Pill className="size-5 text-caution" strokeWidth={2.2} />}
               label="Current medications"
               value={data.medications}
@@ -118,41 +163,81 @@ export function TriageCard({ data }: { data: EmergencyView }) {
             />
           </div>
 
-          {/* 5 — EMERGENCY CONTACT */}
+          {/* Additional notes */}
+          {data.additional_notes.trim().length > 0 && (
+            <Block
+              index={6}
+              icon={
+                <NotebookPen className="size-5 text-foreground" strokeWidth={2.2} />
+              }
+              label="Other notes"
+              value={data.additional_notes}
+              empty=""
+              className="mt-4"
+            />
+          )}
+
+          {/* 5 — EMERGENCY CONTACTS */}
           <section
             className="beacon-rise mt-4 rounded-2xl border border-border bg-card p-5"
             style={rise(6)}
           >
             <div className="flex items-center gap-2">
               <Phone className="size-5 text-primary" strokeWidth={2.2} />
-              <span className="data-label">Emergency contact</span>
+              <span className="data-label">Emergency contacts</span>
             </div>
-            {data.emergency_contact_name || data.emergency_contact_phone ? (
-              <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-2">
-                {data.emergency_contact_name && (
-                  <p className="text-lg font-medium text-foreground">
-                    {data.emergency_contact_name}
-                  </p>
+            <div className="mt-2 flex flex-col gap-3">
+              <ContactRow contact={data.emergency_contact} />
+              {(data.emergency_contact_2.name ||
+                data.emergency_contact_2.phone) && (
+                <div className="rule-dotted pt-3">
+                  <ContactRow contact={data.emergency_contact_2} />
+                </div>
+              )}
+              {!data.emergency_contact.name &&
+                !data.emergency_contact.phone &&
+                !data.emergency_contact_2.name &&
+                !data.emergency_contact_2.phone && (
+                  <p className="text-muted-foreground">None on file</p>
                 )}
-                {data.emergency_contact_phone && (
-                  <a
-                    href={`tel:${data.emergency_contact_phone}`}
-                    className="data-value text-xl text-primary underline-offset-2 hover:underline"
-                  >
-                    {data.emergency_contact_phone}
-                  </a>
-                )}
-              </div>
-            ) : (
-              <p className="mt-1.5 text-muted-foreground">None on file</p>
-            )}
+            </div>
           </section>
+
+          {/* Primary doctor */}
+          {(data.primary_physician.name || data.primary_physician.phone) && (
+            <section
+              className="beacon-rise mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5"
+              style={rise(7)}
+            >
+              <div className="flex items-center gap-2">
+                <HeartHandshake
+                  className="size-5 text-primary"
+                  strokeWidth={2.2}
+                />
+                <div>
+                  <span className="data-label">Primary doctor</span>
+                  {data.primary_physician.name && (
+                    <p className="text-foreground">
+                      {data.primary_physician.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {data.primary_physician.phone && (
+                <a
+                  href={`tel:${data.primary_physician.phone}`}
+                  className="data-value text-primary underline-offset-2 hover:underline"
+                >
+                  {data.primary_physician.phone}
+                </a>
+              )}
+            </section>
+          )}
         </div>
 
-        {/* Audit footer */}
         <footer
           className="beacon-rise rule-dotted flex items-center gap-1.5 px-6 py-4 text-xs text-muted-foreground"
-          style={rise(7)}
+          style={rise(8)}
         >
           <ShieldCheck className="size-3.5 shrink-0" />
           <span>
@@ -166,23 +251,53 @@ export function TriageCard({ data }: { data: EmergencyView }) {
   );
 }
 
+function ContactRow({ contact }: { contact: EmergencyContact }) {
+  if (!contact.name && !contact.phone) return null;
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div>
+        {contact.name && (
+          <span className="text-lg font-medium text-foreground">
+            {contact.name}
+          </span>
+        )}
+        {contact.relationship && (
+          <span className="ml-2 text-sm text-muted-foreground">
+            {contact.relationship}
+          </span>
+        )}
+      </div>
+      {contact.phone && (
+        <a
+          href={`tel:${contact.phone}`}
+          className="data-value text-xl text-primary underline-offset-2 hover:underline"
+        >
+          {contact.phone}
+        </a>
+      )}
+    </div>
+  );
+}
+
 function Block({
   index,
   icon,
   label,
   value,
   empty,
+  className = "",
 }: {
   index: number;
   icon: React.ReactNode;
   label: string;
   value: string;
   empty: string;
+  className?: string;
 }) {
   const has = value.trim().length > 0;
   return (
     <section
-      className="beacon-rise rounded-2xl border border-border bg-card p-5"
+      className={`beacon-rise rounded-2xl border border-border bg-card p-5 ${className}`}
       style={rise(index)}
     >
       <div className="flex items-center gap-2">
