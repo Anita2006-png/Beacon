@@ -31,7 +31,11 @@ export async function recordDownloadResponse(
 ): Promise<Response> {
   const bytes =
     format === "docx"
-      ? await renderRecordDocx({ view: input.view, generatedFor: input.generatedFor })
+      ? await renderRecordDocx({
+          view: input.view,
+          generatedFor: input.generatedFor,
+          qrPngDataUrl: input.qrPngDataUrl,
+        })
       : await renderRecordPdf(input);
 
   // Copy into a fresh ArrayBuffer-backed view so the body is a valid BodyInit

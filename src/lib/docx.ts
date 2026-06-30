@@ -11,8 +11,8 @@ import {
   BorderStyle,
   AlignmentType,
   ShadingType,
-  Header,
   Footer,
+  ImageRun,
   VerticalAlign,
 } from "docx";
 import type { EmergencyView } from "@/lib/emergency";
@@ -35,6 +35,7 @@ import {
 // Hex colours (no leading #) matching the teal brand tokens.
 const TEAL_700 = "0F766E";
 const TEAL_800 = "115E59";
+const TEAL_500 = "14B8A6";
 const TEAL_50 = "F0FDFA";
 const TEAL_200 = "99F6E4";
 const INK = "1A1714";
@@ -60,15 +61,19 @@ const NO_BORDERS = {
 export interface RecordDocxInput {
   view: EmergencyView;
   generatedFor: string;
+  qrPngDataUrl?: string;
 }
 
 export async function renderRecordDocx({
   view,
   generatedFor,
+  qrPngDataUrl,
 }: RecordDocxInput): Promise<Uint8Array> {
   const id = recordIdentity(view);
 
   const body: (Paragraph | Table)[] = [
+    // Teal brand band (in the body, full colour, with the QR — mirrors the PDF)
+    ...brandBand(qrPngDataUrl),
     // Patient identity
     new Paragraph({
       spacing: { before: 200, after: 20 },
@@ -93,7 +98,6 @@ export async function renderRecordDocx({
     sections: [
       {
         properties: { page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } } },
-        headers: { default: brandHeader() },
         footers: { default: pageFooter(generatedFor) },
         children: body,
       },
@@ -104,51 +108,88 @@ export async function renderRecordDocx({
   return new Uint8Array(buffer);
 }
 
-/** Teal full-width header band with the wordmark + subtitle. */
-function brandHeader(): Header {
-  return new Header({
+/**
+ * Teal full-width brand band, rendered in the document body (not the Word
+ * header region, which Word dims in edit view). Wordmark + subtitle on the
+ * left, QR on a white card on the right — mirroring the PDF header.
+ */
+function brandBand(qrPngDataUrl?: string): (Table | Paragraph)[] {
+  const qr = qrImage(qrPngDataUrl);
+
+  const bandBorders = {
+    ...NO_BORDERS,
+    bottom: { style: BorderStyle.SINGLE, size: 18, color: TEAL_500 },
+  };
+
+  const wordmark = new TableCell({
+    shading: { type: ShadingType.CLEAR, fill: TEAL_700, color: "auto" },
+    margins: { top: 200, bottom: 200, left: 240, right: 120 },
+    verticalAlign: VerticalAlign.CENTER,
+    borders: bandBorders,
     children: [
-      new Table({
-        width: FULL,
-        borders: NO_BORDERS,
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({
-                shading: { type: ShadingType.CLEAR, fill: TEAL_700, color: "auto" },
-                margins: { top: 160, bottom: 160, left: 220, right: 220 },
-                borders: {
-                  ...NO_BORDERS,
-                  bottom: { style: BorderStyle.SINGLE, size: 24, color: TEAL_800 },
-                },
-                children: [
-                  new Paragraph({
-                    spacing: { after: 0 },
-                    children: [
-                      new TextRun({ text: "BEACON", bold: true, size: 44, color: WHITE }),
-                    ],
-                  }),
-                  new Paragraph({
-                    spacing: { before: 20 },
-                    children: [
-                      new TextRun({
-                        text: "EMERGENCY MEDICAL RECORD",
-                        bold: true,
-                        size: 16,
-                        color: TEAL_200,
-                        characterSpacing: 30,
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
+      new Paragraph({
+        spacing: { after: 0 },
+        children: [new TextRun({ text: "BEACON", bold: true, size: 48, color: WHITE })],
+      }),
+      new Paragraph({
+        spacing: { before: 30, after: 20 },
+        children: [
+          new TextRun({
+            text: "EMERGENCY MEDICAL RECORD",
+            bold: true,
+            size: 16,
+            color: TEAL_200,
+            characterSpacing: 30,
           }),
         ],
       }),
-      new Paragraph({ spacing: { after: 120 } }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Digital Health Passport", size: 15, color: TEAL_200 }),
+        ],
+      }),
     ],
   });
+
+  const qrCell = new TableCell({
+    shading: { type: ShadingType.CLEAR, fill: TEAL_700, color: "auto" },
+    margins: { top: 200, bottom: 200, left: 120, right: 240 },
+    verticalAlign: VerticalAlign.CENTER,
+    borders: bandBorders,
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        children: qr ? [qr] : [],
+      }),
+    ],
+  });
+
+  return [
+    new Table({
+      width: FULL,
+      borders: NO_BORDERS,
+      columnWidths: [6800, 2800],
+      rows: [new TableRow({ children: [wordmark, qrCell] })],
+    }),
+    new Paragraph({ spacing: { after: 160 } }),
+  ];
+}
+
+/** Decode the QR data URL into a docx ImageRun on a white backing card. */
+function qrImage(qrPngDataUrl?: string): ImageRun | null {
+  if (!qrPngDataUrl) return null;
+  const base64 = qrPngDataUrl.split(",")[1];
+  if (!base64) return null;
+  try {
+    const data = Uint8Array.from(Buffer.from(base64, "base64"));
+    return new ImageRun({
+      data,
+      type: "png",
+      transformation: { width: 84, height: 84 },
+    });
+  } catch {
+    return null;
+  }
 }
 
 /** Two emphasis cells: blood group (teal) and allergies (red when present). */
