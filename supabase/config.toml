@@ -10,8 +10,10 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/**"]
 
 [auth.email]
-# Set to false during the demo for frictionless sign-in; true once SMTP is wired.
-enable_confirmations = true
+# Off for now: no SMTP is wired up yet, so a confirmation email would never
+# arrive and would lock users out at signup. Flip to true once SMTP is
+# configured — and re-run `pnpm supabase config push` to apply it.
+enable_confirmations = false
 
 [auth.email.template.confirmation]
 subject = "Confirm your Beacon email"
