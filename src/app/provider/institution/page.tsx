@@ -4,8 +4,6 @@ import { ArrowLeft, Building2, CheckCircle2, Clock, XCircle } from "lucide-react
 import { getCurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { InstitutionMemberRow, InstitutionRow } from "@/lib/database.types";
-import { Brand } from "@/components/brand";
-import { SignOutButton } from "@/components/sign-out-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,38 +54,28 @@ export default async function ProviderInstitutionPage() {
   >[]).filter((i) => !requestedIds.has(i.id));
 
   return (
-    <div className="bg-aurora relative min-h-dvh overflow-hidden">
-      <div className="grain absolute inset-0" aria-hidden />
+    <div className="mx-auto w-full max-w-2xl">
+      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+        <Link href="/provider">
+          <ArrowLeft />
+          Back to dashboard
+        </Link>
+      </Button>
 
-      <header className="relative z-10 border-b border-border/70">
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-5 py-4">
-          <Brand href="/provider" />
-          <SignOutButton variant="outline" />
-        </div>
+      <header className="beacon-rise mb-6">
+        <span className="data-label text-primary-700">Affiliation</span>
+        <h1 className="font-display mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
+          <Building2 className="size-6 text-primary" />
+          Institution affiliation
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Your medical license is verified independently of any facility. You
+          can also request affiliation with a verified hospital or clinic —
+          useful if you practise there.
+        </p>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-2xl px-5 py-12">
-        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-          <Link href="/provider">
-            <ArrowLeft />
-            Back to dashboard
-          </Link>
-        </Button>
-
-        <header className="beacon-rise mb-6">
-          <span className="data-label text-primary-400">Affiliation</span>
-          <h1 className="font-display mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
-            <Building2 className="size-6 text-primary" />
-            Institution affiliation
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Your medical license is verified independently of any facility. You
-            can also request affiliation with a verified hospital or clinic —
-            useful if you practise there.
-          </p>
-        </header>
-
-        <Card className="mb-6">
+      <Card className="mb-6">
           <CardHeader>
             <CardTitle>Your affiliations</CardTitle>
           </CardHeader>
@@ -147,7 +135,6 @@ export default async function ProviderInstitutionPage() {
             )}
           </CardContent>
         </Card>
-      </main>
     </div>
   );
 }

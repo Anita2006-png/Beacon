@@ -7,7 +7,7 @@ export default async function ProfileEditPage() {
   return (
     <div className="mx-auto w-full max-w-2xl">
       <header className="beacon-rise mb-7">
-        <span className="data-label text-primary-400">
+        <span className="data-label text-primary-700">
           {profile ? "Editing" : "New passport"}
         </span>
         <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">

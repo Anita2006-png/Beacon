@@ -43,7 +43,7 @@ export default async function AccessLogPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="beacon-rise">
-        <span className="data-label text-primary-400">Audit trail</span>
+        <span className="data-label text-primary-700">Audit trail</span>
         <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">
           Access log
         </h1>

@@ -52,7 +52,7 @@ export function RecordExport() {
   return (
     <div className="surface flex flex-col gap-4 p-5">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 text-primary-400">
+        <span className="mt-0.5 text-primary-700">
           <FileText className="size-5" />
         </span>
         <div>

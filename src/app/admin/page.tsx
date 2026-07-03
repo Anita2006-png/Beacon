@@ -13,11 +13,11 @@ import {
   UserRound,
 } from "lucide-react";
 import { isAdmin } from "@/lib/admin-guard";
+import { getCurrentProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ProviderStatus, UserRole } from "@/lib/database.types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Brand } from "@/components/brand";
-import { SignOutButton } from "@/components/sign-out-button";
+import { AvatarInitials } from "@/components/avatar-initials";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +86,7 @@ export default async function AdminPage() {
     );
   }
 
+  const session = await getCurrentProfile();
   const admin = createAdminClient();
   const [totalUsers, doctors, patients, pending, pendingFacilities] =
     await Promise.all([
@@ -125,27 +126,26 @@ export default async function AdminPage() {
   ] as const;
 
   return (
-    <div className="bg-aurora relative min-h-dvh">
-      <header className="relative z-10 border-b border-border/70">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-4">
-          <Brand href="/" />
-          <SignOutButton variant="outline" />
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-5xl px-5 py-10">
-        <header className="beacon-rise mb-8">
-          <span className="data-label block text-primary-400">
+    <div className="mx-auto w-full max-w-5xl">
+      <header className="beacon-rise mb-8 flex items-center gap-4">
+        <AvatarInitials name={session?.profile.full_name ?? null} />
+        <div>
+          <span className="data-label block text-primary-700">
             Administration
           </span>
           <h1 className="font-display mt-1 flex items-center gap-2 text-3xl font-semibold tracking-tight text-foreground">
             <ShieldCheck className="size-7 text-primary" />
-            Admin dashboard
+            Welcome back{
+              session?.profile.full_name
+                ? `, ${session.profile.full_name.split(" ")[0]}`
+                : ""
+            }
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Manage users, approve providers, and review the audit trail.
           </p>
-        </header>
+        </div>
+      </header>
 
       <section className="beacon-rise mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => {
@@ -174,7 +174,7 @@ export default async function AdminPage() {
         })}
       </section>
 
-        <h2 className="data-label mb-3 text-primary-400">System actions</h2>
+        <h2 className="data-label mb-3 text-primary-700">System actions</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {LINKS.map((link) => {
           const Icon = link.icon;
@@ -203,7 +203,6 @@ export default async function AdminPage() {
           );
         })}
         </div>
-      </main>
     </div>
   );
 }

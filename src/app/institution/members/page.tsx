@@ -116,7 +116,7 @@ export default async function InstitutionMembersPage() {
         </Button>
 
         <header className="beacon-rise mb-6">
-          <span className="data-label text-primary-400">{institution.name}</span>
+          <span className="data-label text-primary-700">{institution.name}</span>
           <h1 className="font-display mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
             <Users className="size-6 text-primary" />
             Facility staff

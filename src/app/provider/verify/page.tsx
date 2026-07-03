@@ -10,8 +10,6 @@ import {
 import { getCurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ProviderVerificationRow } from "@/lib/database.types";
-import { Brand } from "@/components/brand";
-import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -52,25 +50,15 @@ export default async function ProviderVerifyPage() {
     verification?.practitioner_type ?? metaPractitionerType;
 
   return (
-    <div className="bg-aurora relative min-h-dvh overflow-hidden">
-      <div className="grain absolute inset-0" aria-hidden />
+    <div className="mx-auto w-full max-w-2xl">
+      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+        <Link href="/provider">
+          <ArrowLeft />
+          Back to dashboard
+        </Link>
+      </Button>
 
-      <header className="relative z-10 border-b border-border/70">
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-5 py-4">
-          <Brand href="/provider" />
-          <SignOutButton variant="outline" />
-        </div>
-      </header>
-
-      <main className="relative z-10 mx-auto w-full max-w-2xl px-5 py-12">
-        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-          <Link href="/provider">
-            <ArrowLeft />
-            Back to dashboard
-          </Link>
-        </Button>
-
-        <div className="beacon-rise surface-lift overflow-hidden">
+      <div className="beacon-rise surface-lift overflow-hidden">
           <div className="flex items-center justify-between bg-gradient-to-r from-primary-800 to-primary-600 px-6 py-4 text-primary-foreground">
             <span className="flex items-center gap-2">
               <ShieldCheck className="size-5" strokeWidth={2.4} />
@@ -159,7 +147,6 @@ export default async function ProviderVerifyPage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }

@@ -142,7 +142,7 @@ export default async function LandingPage() {
             <h2 className="font-display max-w-md text-3xl font-semibold tracking-tight sm:text-4xl">
               Built like a document you can trust.
             </h2>
-            <span className="data-label hidden text-primary-400 sm:block">
+            <span className="data-label hidden text-primary-700 sm:block">
               How it works
             </span>
           </div>

@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/auth";
 import {
   getOwnMedicalProfileDecrypted,
   type DecryptedMedicalProfile,
@@ -17,6 +18,7 @@ import {
 import { qrDataUrl } from "@/lib/qr";
 import { Button } from "@/components/ui/button";
 import { SavedToast } from "@/components/patient/saved-toast";
+import { AvatarInitials } from "@/components/avatar-initials";
 
 function formatWhen(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -70,6 +72,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ saved?: string }>;
 }) {
   const sp = await searchParams;
+  const session = await getCurrentProfile();
   const profile = await getOwnMedicalProfileDecrypted();
   const items = checklist(profile);
   const filled = items.filter((i) => i.done).length;
@@ -86,19 +89,25 @@ export default async function DashboardPage({
     : { data: [] };
 
   const qr = profile ? await qrDataUrl(profile.qr_token) : null;
+  const firstName = session?.profile.full_name?.split(" ")[0];
 
   return (
     <div className="flex flex-col gap-8">
       {sp.saved && <SavedToast />}
 
-      <header className="beacon-rise">
-        <span className="data-label text-primary-400">Your passport</span>
-        <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">
-          {profile ? "Welcome back" : "Let's set up your passport"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Keep it complete so it&apos;s ready the moment someone needs it.
-        </p>
+      <header className="beacon-rise flex items-center gap-4">
+        <AvatarInitials name={session?.profile.full_name ?? null} />
+        <div>
+          <span className="data-label text-primary-700">Your passport</span>
+          <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">
+            {profile
+              ? `Welcome back${firstName ? `, ${firstName}` : ""} 👋`
+              : "Let's set up your passport"}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Keep it complete so it&apos;s ready the moment someone needs it.
+          </p>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">

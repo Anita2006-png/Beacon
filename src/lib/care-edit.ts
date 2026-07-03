@@ -6,10 +6,10 @@ import type { MedicalProfileRow } from "@/lib/database.types";
 
 /**
  * A doctor's write path to a patient's clinical fields — deliberately
- * separate from the read path in emergency.ts. Only reachable once the
- * PATIENT has approved a care_access_requests grant for this doctor (see
- * 0011_care_access.sql); this module re-checks that grant itself rather than
- * trusting the caller, the same defensive stance as the emergency reads.
+ * separate from the read path in emergency.ts. Any approved provider can
+ * write here (no patient-side approval required); every write is still
+ * logged and the patient is still notified, so it stays visible even though
+ * it's no longer gated.
  *
  * Scope is intentionally narrow: only the encrypted clinical free-text fields
  * (allergies, medications, medical_conditions, additional_notes). Identity
@@ -45,16 +45,6 @@ export async function applyClinicalEdit(
   accessor: EditAccessor,
 ): Promise<EditResult> {
   const admin = createAdminClient();
-
-  // Never trust the caller — re-verify the patient actually approved this
-  // doctor before writing anything.
-  const { data: grant } = await admin
-    .from("care_access_requests")
-    .select("status")
-    .eq("doctor_id", accessor.id)
-    .eq("patient_user_id", patientUserId)
-    .maybeSingle();
-  if (!grant || grant.status !== "approved") return "forbidden";
 
   const { data: mp } = await admin
     .from("medical_profiles")

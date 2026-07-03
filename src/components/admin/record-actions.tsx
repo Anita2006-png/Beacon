@@ -29,7 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TriageCard } from "@/components/emergency/triage-card";
+import { RecordView } from "@/components/emergency/record-view";
 
 function PendingButton({
   idle,
@@ -349,7 +349,7 @@ export function RecordSearch() {
             </h2>
             <RecordActions patientId={opened.patientId} reason={opened.reason} />
           </div>
-          <TriageCard data={opened.view} />
+          <RecordView data={opened.view} />
         </section>
       )}
     </div>

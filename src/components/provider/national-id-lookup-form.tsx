@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Mail, Search, SearchX, ShieldOff } from "lucide-react";
 import { lookupPatient, type LookupState } from "@/app/provider/lookup/actions";
-import { TriageCard } from "@/components/emergency/triage-card";
+import { RecordView } from "@/components/emergency/record-view";
 import { CareAccessPanel } from "@/components/provider/care-access-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,12 +124,8 @@ export function NationalIdLookupForm() {
 
       {state.status === "ok" && (
         <>
-          <TriageCard data={state.view} />
-          <CareAccessPanel
-            patientUserId={state.patient_user_id}
-            careAccessStatus={state.care_access_status}
-            view={state.view}
-          />
+          <RecordView data={state.view} />
+          <CareAccessPanel patientUserId={state.patient_user_id} view={state.view} />
         </>
       )}
     </div>

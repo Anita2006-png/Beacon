@@ -35,7 +35,7 @@ export default async function QrPage() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-7">
       <header className="beacon-rise">
-        <span className="data-label text-primary-400">Carry this with you</span>
+        <span className="data-label text-primary-700">Carry this with you</span>
         <h1 className="font-display mt-1 text-3xl font-semibold tracking-tight">
           Your emergency code
         </h1>

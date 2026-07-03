@@ -10,10 +10,13 @@ export function Brand({
   href = "/",
   className,
   showCaption = false,
+  light = false,
 }: {
   href?: string | null;
   className?: string;
   showCaption?: boolean;
+  /** Render for a dark surface (e.g. the sidebar shell) — light text instead of foreground. */
+  light?: boolean;
 }) {
   const inner = (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
@@ -21,11 +24,21 @@ export function Brand({
         <HeartPulse className="size-5" strokeWidth={2.4} />
       </span>
       <span className="flex flex-col leading-none">
-        <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+        <span
+          className={cn(
+            "font-display text-xl font-semibold tracking-tight",
+            light ? "text-white" : "text-foreground",
+          )}
+        >
           Beacon
         </span>
         {showCaption && (
-          <span className="data-label mt-1 !text-[0.6rem] !tracking-[0.2em]">
+          <span
+            className={cn(
+              "data-label mt-1 !text-[0.6rem] !tracking-[0.2em]",
+              light && "!text-primary-200/70",
+            )}
+          >
             Health Passport
           </span>
         )}

@@ -84,9 +84,9 @@ export default async function AdminInstitutionsPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
+    <div className="mx-auto w-full max-w-5xl">
       <header className="beacon-rise mb-7">
-        <span className="data-label text-primary-400">Administration</span>
+        <span className="data-label text-primary-700">Administration</span>
         <h1 className="font-display mt-1 flex items-center gap-2 text-3xl font-semibold tracking-tight text-foreground">
           <Building2 className="size-7 text-primary" />
           Facility verifications
@@ -186,6 +186,6 @@ export default async function AdminInstitutionsPage() {
           )}
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

@@ -1,12 +1,13 @@
-import "server-only";
 import type { EmergencyView } from "@/lib/emergency";
 
 /**
- * Single source of truth for the *content* of an exported record, shared by the
- * PDF (`pdf.ts`) and Word (`docx.ts`) renderers so both stay in lockstep. Only
- * the presentation layer differs between formats — the labels, order, and
- * "criticality" of each field live here. Layout follows an ID-card style:
- * an info grid up top, a 3-column medical table, then contacts.
+ * Single source of truth for the *content* of a patient record, shared by the
+ * PDF (`pdf.ts`), Word (`docx.ts`), AND the on-screen document-style view
+ * (`components/emergency/record-view.tsx`) so all three stay in lockstep.
+ * Pure data shaping only (no secrets/env access), so it's safe to import from
+ * client components too — only the presentation layer differs between them.
+ * Layout follows an ID-card style: an info grid up top, a 3-column medical
+ * table, then contacts.
  */
 
 export interface InfoField {
