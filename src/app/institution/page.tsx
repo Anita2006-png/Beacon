@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   Building2,
   CheckCircle2,
+  ClipboardList,
   Clock,
   ShieldCheck,
   Users,
@@ -119,10 +120,9 @@ export default async function InstitutionHomePage() {
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
                   <p className="text-sm leading-relaxed text-foreground">
-                    Your facility is verified. Enrolling and managing clinical
-                    staff (doctors and nurses) under your institution is coming
-                    next — your verification is the foundation that makes those
-                    affiliations trustworthy.
+                    Your facility is verified. Review staff affiliation requests
+                    below, and declare your expected staff roster so an admin
+                    can cross-check new signups against who actually works here.
                   </p>
                 </div>
               ) : status === "rejected" ? (
@@ -161,12 +161,20 @@ export default async function InstitutionHomePage() {
               </Button>
 
               {verified && (
-                <Button asChild variant="outline">
-                  <Link href="/institution/members">
-                    <Users />
-                    Manage staff
-                  </Link>
-                </Button>
+                <>
+                  <Button asChild variant="outline">
+                    <Link href="/institution/members">
+                      <Users />
+                      Manage staff
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/institution/roster">
+                      <ClipboardList />
+                      Staff roster
+                    </Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>

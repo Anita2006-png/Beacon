@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Clock, Users, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, ShieldCheck, Users, XCircle } from "lucide-react";
 import { getCurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -93,6 +93,26 @@ export default async function InstitutionMembersPage() {
     : { data: null };
   const emailById = new Map(userList?.users.map((u) => [u.id, u.email ?? ""]));
 
+  // Roster-match signal: does the requester's own license number appear on
+  // THIS institution's declared staff roster? A corroborating aid — the
+  // institution still clicks Approve either way.
+  const { data: verifications } = memberIds.length
+    ? await admin
+        .from("provider_verifications")
+        .select("provider_id, license_number")
+        .in("provider_id", memberIds)
+    : { data: [] as { provider_id: string; license_number: string }[] };
+  const licenseByMemberId = new Map(
+    (verifications ?? []).map((v) => [v.provider_id, v.license_number]),
+  );
+  const { data: roster } = await supabase
+    .from("institution_staff_roster")
+    .select("license_number")
+    .eq("institution_id", institution.id);
+  const rosterLicenses = new Set(
+    (roster ?? []).map((r) => r.license_number.trim().toUpperCase()),
+  );
+
   const pending = rows.filter((r) => r.status === "pending");
   const decided = rows.filter((r) => r.status !== "pending");
 
@@ -148,6 +168,10 @@ export default async function InstitutionMembersPage() {
                 <TableBody>
                   {pending.map((r) => {
                     const name = nameById.get(r.member_id) ?? "Practitioner";
+                    const license = licenseByMemberId.get(r.member_id);
+                    const onRoster = Boolean(
+                      license && rosterLicenses.has(license.trim().toUpperCase()),
+                    );
                     return (
                       <TableRow key={r.id}>
                         <TableCell>
@@ -155,6 +179,16 @@ export default async function InstitutionMembersPage() {
                           <div className="tabular text-sm text-muted-foreground">
                             {emailById.get(r.member_id) ?? "—"}
                           </div>
+                          {onRoster ? (
+                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-safe">
+                              <ShieldCheck className="size-3.5" />
+                              Matches your staff roster
+                            </div>
+                          ) : (
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Not on your declared roster
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <MemberReview memberRowId={r.id} name={name} />

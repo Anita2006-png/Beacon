@@ -1,4 +1,4 @@
-import { ExternalLink, ShieldAlert, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ExternalLink, ShieldAlert, ShieldCheck } from "lucide-react";
 import { isAdmin } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signedLicenseUrl } from "@/lib/storage";
@@ -87,6 +87,30 @@ export default async function AdminVerificationsPage() {
     }),
   );
 
+  // Roster-match signal: does this license number appear on any institution's
+  // declared staff roster? A corroborating aid for the reviewer — never an
+  // auto-approval.
+  const { data: rosterEntries } = await admin
+    .from("institution_staff_roster")
+    .select("institution_id, license_number");
+  const institutionIdsForRoster = [
+    ...new Set((rosterEntries ?? []).map((e) => e.institution_id)),
+  ];
+  const { data: rosterInstitutions } = institutionIdsForRoster.length
+    ? await admin.from("institutions").select("id, name").in("id", institutionIdsForRoster)
+    : { data: [] as { id: string; name: string }[] };
+  const rosterInstitutionNameById = new Map(
+    (rosterInstitutions ?? []).map((i) => [i.id, i.name]),
+  );
+  const rosterMatchByLicense = new Map<string, string[]>();
+  for (const entry of rosterEntries ?? []) {
+    const key = entry.license_number.trim().toUpperCase();
+    const institutionName = rosterInstitutionNameById.get(entry.institution_id) ?? "a facility";
+    const list = rosterMatchByLicense.get(key) ?? [];
+    list.push(institutionName);
+    rosterMatchByLicense.set(key, list);
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl">
       <header className="beacon-rise mb-7">
@@ -127,6 +151,9 @@ export default async function AdminVerificationsPage() {
                   const summary = checkSummary(v.verify_check_result);
                   const url = docUrls.get(v.id) ?? null;
                   const name = nameById.get(v.provider_id) ?? "Practitioner";
+                  const rosterMatches = rosterMatchByLicense.get(
+                    v.license_number.trim().toUpperCase(),
+                  );
                   return (
                     <TableRow key={v.id}>
                       <TableCell>
@@ -140,7 +167,13 @@ export default async function AdminVerificationsPage() {
                         <div className="text-muted-foreground">{v.council}</div>
                       </TableCell>
                       <TableCell className="tabular">
-                        {v.license_number}
+                        <div>{v.license_number}</div>
+                        {rosterMatches && rosterMatches.length > 0 && (
+                          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-safe">
+                            <CheckCircle2 className="size-3.5" />
+                            Matches roster at {rosterMatches.join(", ")}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={summary.variant}>{summary.label}</Badge>

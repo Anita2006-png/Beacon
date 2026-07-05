@@ -174,6 +174,15 @@ export type NotificationReadRow = {
   dismissed_at: string | null;
 };
 
+export type InstitutionStaffRosterRow = {
+  id: string;
+  institution_id: string;
+  full_name: string;
+  license_number: string;
+  practitioner_type: PractitionerType;
+  created_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -250,6 +259,16 @@ export interface Database {
           access_log_id: string;
         };
         Update: Partial<NotificationReadRow>;
+        Relationships: [];
+      };
+      institution_staff_roster: {
+        Row: InstitutionStaffRosterRow;
+        Insert: Partial<InstitutionStaffRosterRow> & {
+          institution_id: string;
+          full_name: string;
+          license_number: string;
+        };
+        Update: Partial<InstitutionStaffRosterRow>;
         Relationships: [];
       };
     };
