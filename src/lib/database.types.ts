@@ -11,6 +11,7 @@ export type ProviderStatus = "none" | "pending" | "approved";
 export type VerificationStatus = "pending" | "verified" | "rejected";
 export type MembershipStatus = "pending" | "approved" | "rejected";
 export type CareAccessStatus = "pending" | "approved" | "rejected" | "revoked";
+export type AuthEventType = "signup" | "login";
 export type PractitionerType = "doctor" | "nurse";
 export type Council = "MDCN" | "NMCN";
 export type FacilityType =
@@ -183,6 +184,14 @@ export type InstitutionStaffRosterRow = {
   created_at: string;
 };
 
+export type AuthEventRow = {
+  id: string;
+  user_id: string;
+  event_type: AuthEventType;
+  email: string;
+  created_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -269,6 +278,16 @@ export interface Database {
           license_number: string;
         };
         Update: Partial<InstitutionStaffRosterRow>;
+        Relationships: [];
+      };
+      auth_events: {
+        Row: AuthEventRow;
+        Insert: Partial<AuthEventRow> & {
+          user_id: string;
+          event_type: AuthEventType;
+          email: string;
+        };
+        Update: Partial<AuthEventRow>;
         Relationships: [];
       };
     };

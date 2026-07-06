@@ -3,9 +3,32 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { credentialsSchema, signupSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isAdmin } from "@/lib/admin-guard";
+import type { AuthEventType } from "@/lib/database.types";
+
+/**
+ * Signup/login audit entry. Awaited (not fire-and-forget) so the write
+ * completes before the caller's subsequent redirect() throws and the request
+ * winds down — but a logging failure never blocks or errors the actual auth
+ * flow. Written via the admin client: auth_events has no client policies at
+ * all, matching access_logs/admin_actions.
+ */
+async function logAuthEvent(
+  userId: string,
+  eventType: AuthEventType,
+  email: string,
+): Promise<void> {
+  try {
+    await createAdminClient()
+      .from("auth_events")
+      .insert({ user_id: userId, event_type: eventType, email });
+  } catch {
+    // Never let a logging failure break signup/login.
+  }
+}
 
 export interface AuthState {
   error?: string;
@@ -75,6 +98,10 @@ export async function signUpAction(
     return { error: error.message };
   }
 
+  if (data.user) {
+    await logAuthEvent(data.user.id, "signup", parsed.data.email);
+  }
+
   // Provider self-registration: if signup already granted a session (email
   // confirmation off), skip the interstitial and go straight to submitting a
   // license. Otherwise land on /provider/pending, which explains they must
@@ -115,7 +142,7 @@ export async function signInAction(
   const next = (formData.get("next") as string) || "";
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
   });
@@ -125,13 +152,15 @@ export async function signInAction(
     return { error: "That email or password didn't match. Please try again." };
   }
 
+  if (signInData.user) {
+    await logAuthEvent(signInData.user.id, "login", parsed.data.email);
+  }
+
   if (next.startsWith("/")) {
     redirect(next);
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = signInData.user;
 
   // Admins (allowlist) land on the admin dashboard.
   if (await isAdmin()) redirect("/admin");

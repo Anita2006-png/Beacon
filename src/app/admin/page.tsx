@@ -4,6 +4,7 @@ import {
   Building2,
   Clock,
   FileSearch,
+  KeyRound,
   ScrollText,
   ShieldAlert,
   ShieldCheck,
@@ -51,6 +52,12 @@ const LINKS = [
     icon: ScrollText,
     title: "Audit log",
     description: "Every privileged admin action, newest first.",
+  },
+  {
+    href: "/admin/auth-log",
+    icon: KeyRound,
+    title: "Auth activity",
+    description: "Every signup and sign-in, across every role.",
   },
 ] as const;
 

@@ -8,6 +8,7 @@ import {
   Building2,
   ClipboardList,
   FileSearch,
+  KeyRound,
   LayoutDashboard,
   QrCode,
   ScrollText,
@@ -42,6 +43,7 @@ const ICONS = {
   institutions: Building2,
   records: FileSearch,
   audit: ScrollText,
+  "auth-log": KeyRound,
 } satisfies Record<string, LucideIcon>;
 
 export type SidebarIconName = keyof typeof ICONS;
