@@ -12,6 +12,8 @@ import { nationalIdHash } from "@/lib/verification";
 import { renderRecordPdf } from "@/lib/pdf";
 import { sendRecordTransfer } from "@/lib/notify";
 import { recordTransferSchema } from "@/lib/validation";
+import { signedLicenseUrl } from "@/lib/storage";
+import type { ProviderVerificationRow, ProviderStatus } from "@/lib/database.types";
 
 /** A patient match shown in the search results. */
 export interface PatientMatch {
@@ -241,4 +243,170 @@ export async function emailRecord(
       error: e instanceof Error ? e.message : "Could not send the record.",
     };
   }
+}
+
+/** A doctor/nurse match shown in the provider search results. */
+export interface ProviderMatch {
+  providerId: string; // profiles.id
+  name: string | null;
+  email: string | null;
+}
+
+export interface ProviderSearchState {
+  query?: string;
+  matches?: ProviderMatch[];
+  error?: string;
+}
+
+/**
+ * Search provider accounts by name or email. Unlike patient search, this
+ * isn't a lookup into encrypted medical data — it's the same account info
+ * already visible on /admin/verifications, just searchable directly.
+ */
+export async function searchProviders(
+  _prev: ProviderSearchState,
+  formData: FormData,
+): Promise<ProviderSearchState> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "You are not authorized to perform this search." };
+  }
+
+  const query = String(formData.get("query") ?? "").trim();
+  if (!query) {
+    return { error: "Enter a name or email to search." };
+  }
+
+  const admin = createAdminClient();
+  const q = query.toLowerCase();
+
+  const [{ data: nameMatches }, { data: userList }] = await Promise.all([
+    admin.from("profiles").select("id").eq("role", "provider").ilike("full_name", `%${query}%`),
+    admin.auth.admin.listUsers({ perPage: 1000 }),
+  ]);
+
+  const emailMatchIds = (userList?.users ?? [])
+    .filter((u) => u.email?.toLowerCase().includes(q))
+    .map((u) => u.id);
+
+  const ids = [...new Set([...(nameMatches ?? []).map((p) => p.id), ...emailMatchIds])];
+  if (ids.length === 0) return { query, matches: [] };
+
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id, full_name, role")
+    .in("id", ids);
+  const emailById = new Map((userList?.users ?? []).map((u) => [u.id, u.email ?? null]));
+
+  const matches: ProviderMatch[] = (profiles ?? [])
+    .filter((p) => p.role === "provider")
+    .map((p) => ({
+      providerId: p.id,
+      name: p.full_name,
+      email: emailById.get(p.id) ?? null,
+    }));
+
+  return { query, matches };
+}
+
+export interface ProviderRecordDetail {
+  providerId: string;
+  name: string | null;
+  email: string | null;
+  providerStatus: ProviderStatus | null;
+  verification: {
+    licenseNumber: string;
+    council: string;
+    practitionerType: string;
+    status: string;
+    notes: string | null;
+    documentUrl: string | null;
+  } | null;
+  facility: string | null;
+}
+
+export interface OpenProviderState {
+  detail?: ProviderRecordDetail;
+  error?: string;
+}
+
+/**
+ * Open a provider's profile: account info, council license/verification
+ * status, and facility affiliation. No "reason" gate like patient records —
+ * this isn't PII the way encrypted medical data is, it's the same info
+ * already surfaced (ungated) on /admin/verifications and /admin/institutions.
+ */
+export async function openProviderRecord(
+  _prev: OpenProviderState,
+  formData: FormData,
+): Promise<OpenProviderState> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "You are not authorized to view providers." };
+  }
+
+  const providerId = String(formData.get("providerId") ?? "");
+  if (!providerId) return { error: "No provider was selected." };
+
+  const admin = createAdminClient();
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("full_name, provider_status, role")
+    .eq("id", providerId)
+    .maybeSingle();
+  if (!profile || profile.role !== "provider") {
+    return { error: "That provider could not be found." };
+  }
+
+  const { data: userList } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const email = userList?.users.find((u) => u.id === providerId)?.email ?? null;
+
+  const { data: verification } = await admin
+    .from("provider_verifications")
+    .select("*")
+    .eq("provider_id", providerId)
+    .maybeSingle<ProviderVerificationRow>();
+
+  const documentUrl = verification?.license_document_path
+    ? await signedLicenseUrl(verification.license_document_path)
+    : null;
+
+  const { data: membership } = await admin
+    .from("institution_members")
+    .select("institution_id")
+    .eq("member_id", providerId)
+    .eq("status", "approved")
+    .maybeSingle();
+  let facility: string | null = null;
+  if (membership) {
+    const { data: institution } = await admin
+      .from("institutions")
+      .select("name")
+      .eq("id", membership.institution_id)
+      .maybeSingle();
+    facility = institution?.name ?? null;
+  }
+
+  return {
+    detail: {
+      providerId,
+      name: profile.full_name,
+      email,
+      providerStatus: profile.provider_status,
+      verification: verification
+        ? {
+            licenseNumber: verification.license_number,
+            council: verification.council,
+            practitionerType: verification.practitioner_type,
+            status: verification.status,
+            notes: verification.notes,
+            documentUrl,
+          }
+        : null,
+      facility,
+    },
+  };
 }

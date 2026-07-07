@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import type { FacilityType } from "@/lib/database.types";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Doctor & nurse registration",
@@ -10,7 +14,17 @@ export const metadata = {
     "Doctors (MDCN) and nurses/midwives (NMCN): register for Beacon to access patients' emergency medical information once approved.",
 };
 
-export default function ProviderSignupPage() {
+export default async function ProviderSignupPage() {
+  // Public read of verified facilities (inst_select_verified_public policy) —
+  // lets a not-yet-signed-in doctor pick their facility right at signup
+  // instead of a separate step afterward.
+  const supabase = await createClient();
+  const { data: institutions } = await supabase
+    .from("institutions")
+    .select("id, name, facility_type")
+    .eq("status", "verified")
+    .order("name", { ascending: true });
+
   return (
     <AuthShell
       title="Doctor & nurse registration"
@@ -44,7 +58,11 @@ export default function ProviderSignupPage() {
           You&apos;ll be able to sign in once an administrator approves you.
         </AlertDescription>
       </Alert>
-      <AuthForm mode="signup" role="provider" />
+      <AuthForm
+        mode="signup"
+        role="provider"
+        institutions={(institutions ?? []) as { id: string; name: string; facility_type: FacilityType }[]}
+      />
     </AuthShell>
   );
 }

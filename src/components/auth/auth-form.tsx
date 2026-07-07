@@ -9,7 +9,8 @@ import {
   signUpAction,
   type AuthState,
 } from "@/app/(auth)/actions";
-import { PRACTITIONER_TYPES } from "@/lib/validation";
+import { FACILITY_TYPES, PRACTITIONER_TYPES } from "@/lib/validation";
+import type { FacilityType } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,14 +38,19 @@ function SubmitButton({ label }: { label: string }) {
   );
 }
 
+const FACILITY_LABEL = new Map(FACILITY_TYPES.map((f) => [f.value, f.label]));
+
 export function AuthForm({
   mode,
   role = "patient",
   next,
+  institutions = [],
 }: {
   mode: "login" | "signup";
   role?: "patient" | "provider" | "institution";
   next?: string;
+  /** Verified facilities to offer at provider signup (optional affiliation). */
+  institutions?: { id: string; name: string; facility_type: FacilityType }[];
 }) {
   const action = mode === "signup" ? signUpAction : signInAction;
   const [state, formAction] = useActionState<AuthState, FormData>(action, {});
@@ -136,6 +142,33 @@ export function AuthForm({
               className="tabular"
               placeholder="e.g. MDCN-123456 or NMCN-123456"
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="institution_id">
+              Facility
+              <Required />
+            </Label>
+            <select
+              id="institution_id"
+              name="institution_id"
+              required
+              defaultValue=""
+              className="border-input bg-card focus-visible:ring-ring flex min-h-11 w-full rounded-[var(--radius)] border px-3 py-2 text-base shadow-sm focus:outline-none focus-visible:ring-2"
+            >
+              <option value="" disabled>
+                Choose your facility…
+              </option>
+              {institutions.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name} ({FACILITY_LABEL.get(i.facility_type) ?? i.facility_type})
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-muted-foreground">
+              Sends a request to that facility for approval. Your license is
+              still verified independently by an administrator.
+            </p>
           </div>
         </>
       )}

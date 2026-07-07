@@ -1,5 +1,7 @@
 import { KeyRound, LogIn, ShieldAlert, UserPlus } from "lucide-react";
 import { isAdmin } from "@/lib/admin-guard";
+import { getSessionUser } from "@/lib/auth";
+import { markAuthLogViewed } from "@/lib/admin-auth-log";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AuthEventRow, UserRole } from "@/lib/database.types";
 import { roleLabel } from "@/lib/roles";
@@ -53,6 +55,11 @@ export default async function AdminAuthLogPage({
     );
   }
 
+  // Opening this page bookmarks "now" for this admin, so the sidebar badge
+  // (count of events since their last visit) resets after they've seen it.
+  const viewer = await getSessionUser();
+  if (viewer) await markAuthLogViewed(viewer.id);
+
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
@@ -96,6 +103,18 @@ export default async function AdminAuthLogPage({
         .eq("status", "approved")
         .in("member_id", providerIds)
     : { data: [] as { member_id: string; institution_id: string }[] };
+
+  // Council license number — one row per provider (provider_id is unique on
+  // provider_verifications), regardless of approval status.
+  const { data: verifications } = providerIds.length
+    ? await admin
+        .from("provider_verifications")
+        .select("provider_id, license_number, council")
+        .in("provider_id", providerIds)
+    : { data: [] as { provider_id: string; license_number: string; council: string }[] };
+  const licenseById = new Map(
+    (verifications ?? []).map((v) => [v.provider_id, `${v.council} ${v.license_number}`]),
+  );
 
   const { data: ownedInstitutions } = institutionOwnerIds.length
     ? await admin.from("institutions").select("owner_id, name").in("owner_id", institutionOwnerIds)
@@ -151,6 +170,7 @@ export default async function AdminAuthLogPage({
                   <TableHead>Account</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Facility</TableHead>
+                  <TableHead>License</TableHead>
                   <TableHead>Event</TableHead>
                 </TableRow>
               </TableHeader>
@@ -159,6 +179,7 @@ export default async function AdminAuthLogPage({
                   const role = roleById.get(r.user_id);
                   const name = nameById.get(r.user_id);
                   const facility = facilityById.get(r.user_id);
+                  const license = licenseById.get(r.user_id);
                   return (
                     <TableRow key={r.id}>
                       <TableCell className="tabular whitespace-nowrap text-muted-foreground">
@@ -175,6 +196,9 @@ export default async function AdminAuthLogPage({
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {facility ?? "—"}
+                      </TableCell>
+                      <TableCell className="tabular text-sm text-muted-foreground">
+                        {license ?? "—"}
                       </TableCell>
                       <TableCell>
                         {r.event_type === "signup" ? (

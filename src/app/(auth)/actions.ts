@@ -78,6 +78,15 @@ export async function signUpAction(
       ? String(formData.get("institution_name") ?? "").trim()
       : "";
 
+  // Facility affiliation is compulsory for providers, captured right here
+  // instead of a separate step after signup. Validated before the account is
+  // even created — the <select required> only guards the honest path.
+  const institutionId =
+    role === "provider" ? String(formData.get("institution_id") ?? "").trim() : "";
+  if (role === "provider" && !institutionId) {
+    return { error: "Choose your facility to continue." };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -101,6 +110,23 @@ export async function signUpAction(
   // Admin activity isn't tracked here — only regular accounts.
   if (data.user && !(await isAdmin())) {
     await logAuthEvent(data.user.id, "signup", parsed.data.email);
+  }
+
+  // Compulsory facility affiliation, captured at signup instead of a later
+  // trip to /provider/institution. Same pending-request shape as that page's
+  // own form — the institution still has to approve it. Best-effort: a
+  // signup must never fail because this side request did (the doctor can
+  // still request affiliation again later from /provider/institution).
+  if (role === "provider" && data.user && data.session) {
+    try {
+      await supabase.from("institution_members").insert({
+        institution_id: institutionId,
+        member_id: data.user.id,
+        status: "pending",
+      });
+    } catch {
+      // Non-fatal.
+    }
   }
 
   // Provider self-registration: if signup already granted a session (email

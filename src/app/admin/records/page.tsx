@@ -1,7 +1,7 @@
 import { FileSearch, ShieldAlert } from "lucide-react";
 import { isAdmin } from "@/lib/admin-guard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RecordSearch } from "@/components/admin/record-actions";
+import { FindRecord } from "@/components/admin/find-record";
 
 export const dynamic = "force-dynamic";
 
@@ -36,13 +36,13 @@ export default async function AdminRecordsPage() {
           Find a record
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Look up a patient by email or national ID. Opening a record requires a
-          reason and is recorded in the audit log and the patient&apos;s access
-          log.
+          Look up a patient by email or national ID, or a doctor/nurse by name
+          or email. Opening a patient record requires a reason and is recorded
+          in the audit log and the patient&apos;s access log.
         </p>
       </header>
 
-      <RecordSearch />
+      <FindRecord />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyLicense } from "@/lib/verification";
 import { uploadLicenseDoc } from "@/lib/storage";
 import {
@@ -58,6 +59,22 @@ export async function submitLicenseVerification(
     : "doctor";
   const council = councilFor(practitionerType);
 
+  // Block impersonation: reject if this license number is already registered
+  // to a DIFFERENT provider, before touching the file upload. The RLS user
+  // client can only see its own row, so this pre-check needs the admin
+  // client — it's read-only and only ever returns a yes/no, never who holds
+  // the number. The DB has a matching unique index as the authoritative,
+  // race-condition-proof backstop (caught below as a 23505 if two
+  // submissions land at the same instant).
+  const { data: dup } = await createAdminClient()
+    .from("provider_verifications")
+    .select("provider_id")
+    .neq("provider_id", user.id)
+    .ilike("license_number", licenseNumber.trim());
+  if (dup && dup.length > 0) {
+    return { error: "This license number is already registered to another account." };
+  }
+
   const file = formData.get("license_document");
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Attach a copy of your license." };
@@ -95,6 +112,9 @@ export async function submitLicenseVerification(
   );
 
   if (error) {
+    if (error.code === "23505") {
+      return { error: "This license number is already registered to another account." };
+    }
     return { error: "We couldn't save your submission. Please try again." };
   }
 

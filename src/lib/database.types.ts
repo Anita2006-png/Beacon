@@ -192,6 +192,11 @@ export type AuthEventRow = {
   created_at: string;
 };
 
+export type AdminAuthLogViewRow = {
+  admin_user_id: string;
+  last_viewed_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -288,6 +293,12 @@ export interface Database {
           email: string;
         };
         Update: Partial<AuthEventRow>;
+        Relationships: [];
+      };
+      admin_auth_log_views: {
+        Row: AdminAuthLogViewRow;
+        Insert: Partial<AdminAuthLogViewRow> & { admin_user_id: string };
+        Update: Partial<AdminAuthLogViewRow>;
         Relationships: [];
       };
     };
