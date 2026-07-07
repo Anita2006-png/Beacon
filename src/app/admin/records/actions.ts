@@ -136,6 +136,8 @@ async function profilesToMatches(
 export interface OpenRecordState {
   view?: AdminRecordView["view"];
   patientId?: string;
+  patientUserId?: string;
+  patientRestricted?: boolean;
   reason?: string;
   error?: string;
 }
@@ -166,7 +168,18 @@ export async function openRecord(
       adminId: adminUser.id,
       adminName: await adminName(),
     });
-    return { view: result.view, patientId, reason };
+    const { data: prof } = await createAdminClient()
+      .from("profiles")
+      .select("restricted")
+      .eq("id", result.patientUserId)
+      .maybeSingle();
+    return {
+      view: result.view,
+      patientId,
+      patientUserId: result.patientUserId,
+      patientRestricted: prof?.restricted ?? false,
+      reason,
+    };
   } catch (e) {
     return {
       error: e instanceof Error ? e.message : "Could not open the record.",
@@ -315,6 +328,7 @@ export interface ProviderRecordDetail {
   name: string | null;
   email: string | null;
   providerStatus: ProviderStatus | null;
+  restricted: boolean;
   verification: {
     licenseNumber: string;
     council: string;
@@ -335,7 +349,7 @@ export interface OpenProviderState {
  * Open a provider's profile: account info, council license/verification
  * status, and facility affiliation. No "reason" gate like patient records —
  * this isn't PII the way encrypted medical data is, it's the same info
- * already surfaced (ungated) on /admin/verifications and /admin/institutions.
+ * already surfaced (ungated) on the Approvals page.
  */
 export async function openProviderRecord(
   _prev: OpenProviderState,
@@ -354,7 +368,7 @@ export async function openProviderRecord(
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("full_name, provider_status, role")
+    .select("full_name, provider_status, role, restricted")
     .eq("id", providerId)
     .maybeSingle();
   if (!profile || profile.role !== "provider") {
@@ -396,6 +410,7 @@ export async function openProviderRecord(
       name: profile.full_name,
       email,
       providerStatus: profile.provider_status,
+      restricted: profile.restricted,
       verification: verification
         ? {
             licenseNumber: verification.license_number,

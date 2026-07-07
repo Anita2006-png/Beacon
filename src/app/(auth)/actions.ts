@@ -194,6 +194,19 @@ export async function signInAction(
     return { error: "That email or password didn't match. Please try again." };
   }
 
+  // Restricted accounts are refused even with a correct password. Supabase's
+  // own ban_duration (set by restrictAccount) already blocks this at the Auth
+  // layer in most cases — this is the app-level backstop.
+  const { data: restriction } = await supabase
+    .from("profiles")
+    .select("restricted")
+    .eq("id", signInData.user.id)
+    .maybeSingle();
+  if (restriction?.restricted) {
+    await supabase.auth.signOut();
+    return { error: "Your account has been restricted. Contact an administrator." };
+  }
+
   // Admin activity isn't tracked here — only regular accounts.
   if (signInData.user && !(await isAdmin())) {
     const { isNewDevice, deviceId } = await recognizeDevice(signInData.user.id);

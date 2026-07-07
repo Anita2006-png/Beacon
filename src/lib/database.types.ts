@@ -28,7 +28,9 @@ export type AdminActionType =
   | "provider_approve"
   | "provider_reject"
   | "institution_approve"
-  | "institution_reject";
+  | "institution_reject"
+  | "account_restrict"
+  | "account_unrestrict";
 export type Sex =
   | "female"
   | "male"
@@ -57,6 +59,7 @@ export type ProfileRow = {
   provider_status: ProviderStatus;
   full_name: string | null;
   created_at: string;
+  restricted: boolean;
 };
 
 export type MedicalProfileRow = {

@@ -29,6 +29,8 @@ const ACTION_LABELS: Record<AdminActionType, string> = {
   provider_reject: "Provider rejected",
   institution_approve: "Facility approved",
   institution_reject: "Facility rejected",
+  account_restrict: "Account restricted",
+  account_unrestrict: "Account restored",
 };
 
 const ACTION_VARIANTS: Record<AdminActionType, BadgeProps["variant"]> = {
@@ -39,6 +41,8 @@ const ACTION_VARIANTS: Record<AdminActionType, BadgeProps["variant"]> = {
   provider_reject: "critical",
   institution_approve: "safe",
   institution_reject: "critical",
+  account_restrict: "critical",
+  account_unrestrict: "safe",
 };
 
 function formatWhen(iso: string): string {

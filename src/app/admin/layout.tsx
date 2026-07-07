@@ -18,8 +18,7 @@ export default async function AdminLayout({
 
   const adminNav: SidebarNavItem[] = [
     { href: "/admin", label: "Dashboard", icon: "dashboard" },
-    { href: "/admin/verifications", label: "Provider approvals", icon: "verifications" },
-    { href: "/admin/institutions", label: "Facility approvals", icon: "institutions" },
+    { href: "/admin/approvals", label: "Approvals", icon: "verifications" },
     { href: "/admin/records", label: "Find a record", icon: "records" },
     { href: "/admin/audit", label: "Audit log", icon: "audit" },
     {

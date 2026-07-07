@@ -18,6 +18,7 @@ import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VerificationReview } from "@/components/admin/verification-review";
+import { RestrictControl } from "@/components/admin/restrict-control";
 
 function PendingButton({
   idle,
@@ -147,8 +148,13 @@ export function ProviderRecordSearch() {
 
       {opened.detail && (
         <Card className="beacon-rise">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle>{opened.detail.name ?? "Provider"}</CardTitle>
+            <RestrictControl
+              userId={opened.detail.providerId}
+              name={opened.detail.name ?? "this provider"}
+              isRestricted={opened.detail.restricted}
+            />
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">

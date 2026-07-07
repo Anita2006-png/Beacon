@@ -30,6 +30,7 @@ export async function logAdminAction(input: {
 
 export interface AdminRecordView {
   patientId: string;
+  patientUserId: string;
   view: EmergencyView;
   nationalId: string;
   patientEmail: string | null;
@@ -85,5 +86,12 @@ export async function adminReadRecord(opts: {
 
   const view = await buildEmergencyView(mp, prof?.full_name ?? null);
   const nationalId = await decryptField(mp.national_id);
-  return { patientId: mp.id, view, nationalId, patientEmail: null, qrToken: mp.qr_token };
+  return {
+    patientId: mp.id,
+    patientUserId: mp.user_id,
+    view,
+    nationalId,
+    patientEmail: null,
+    qrToken: mp.qr_token,
+  };
 }

@@ -58,7 +58,7 @@ export async function approveVerification(
     metadata: { provider_id: providerId },
   });
 
-  revalidatePath("/admin/verifications");
+  revalidatePath("/admin/approvals");
   return {};
 }
 
@@ -104,6 +104,6 @@ export async function rejectVerification(
     metadata: { provider_id: providerId },
   });
 
-  revalidatePath("/admin/verifications");
+  revalidatePath("/admin/approvals");
   return {};
 }

@@ -30,6 +30,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { RecordView } from "@/components/emergency/record-view";
+import { RestrictControl } from "@/components/admin/restrict-control";
 
 function PendingButton({
   idle,
@@ -344,9 +345,18 @@ export function RecordSearch() {
       {opened.view && opened.patientId && opened.reason && (
         <section className="beacon-rise flex flex-col gap-4">
           <div className="surface flex flex-col gap-4 p-5">
-            <h2 className="font-display text-lg font-semibold tracking-tight">
-              Opened record
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-lg font-semibold tracking-tight">
+                Opened record
+              </h2>
+              {opened.patientUserId && (
+                <RestrictControl
+                  userId={opened.patientUserId}
+                  name={opened.view.patient_name ?? "this patient"}
+                  isRestricted={opened.patientRestricted ?? false}
+                />
+              )}
+            </div>
             <RecordActions patientId={opened.patientId} reason={opened.reason} />
           </div>
           <RecordView data={opened.view} />

@@ -50,7 +50,7 @@ export async function approveInstitution(
     metadata: { institution_id: institutionId },
   });
 
-  revalidatePath("/admin/institutions");
+  revalidatePath("/admin/approvals");
   return {};
 }
 
@@ -96,6 +96,6 @@ export async function rejectInstitution(
     metadata: { institution_id: institutionId },
   });
 
-  revalidatePath("/admin/institutions");
+  revalidatePath("/admin/approvals");
   return {};
 }

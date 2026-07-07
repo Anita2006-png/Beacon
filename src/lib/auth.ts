@@ -28,7 +28,18 @@ export async function getCurrentProfile(): Promise<
     .eq("id", user.id)
     .maybeSingle();
 
-  if (existing) return { user, profile: existing as ProfileRow };
+  if (existing) {
+    // A restricted account is force-logged-out the moment it next loads any
+    // authenticated page — this is what closes the gap for a session that
+    // was already open when an admin restricted it (Supabase's own ban
+    // blocks new logins/refreshes, but a live, unexpired access token would
+    // otherwise keep working until it naturally expires).
+    if ((existing as ProfileRow).restricted) {
+      await supabase.auth.signOut();
+      return null;
+    }
+    return { user, profile: existing as ProfileRow };
+  }
 
   // Safety net: if the handle_new_user trigger didn't create a profile row
   // (e.g. the account predates the migration), provision it now from signup

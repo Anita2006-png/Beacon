@@ -29,17 +29,11 @@ export const metadata = {
 
 const LINKS = [
   {
-    href: "/admin/verifications",
+    href: "/admin/approvals",
     icon: UserCheck,
-    title: "Provider approvals",
-    description: "Review and verify providers before they can open records.",
-  },
-  {
-    href: "/admin/institutions",
-    icon: Building2,
-    title: "Facility approvals",
+    title: "Approvals",
     description:
-      "Verify hospitals and clinics by their registration before trusting them.",
+      "Review facilities and practitioners, browse who's affiliated with each, and restrict any account.",
   },
   {
     href: "/admin/records",
@@ -100,8 +94,8 @@ export default async function AdminPage() {
       countProfiles(admin),
       countProfiles(admin, { column: "role", value: "provider" }),
       countProfiles(admin, { column: "role", value: "patient" }),
-      // Matches /admin/verifications exactly: a submitted license awaiting
-      // review, not just an account that hasn't been approved yet.
+      // Matches the Approvals page's pending-practitioners queue exactly: a
+      // submitted license awaiting review, not just an unapproved account.
       admin
         .from("provider_verifications")
         .select("*", { count: "exact", head: true })
