@@ -61,6 +61,60 @@ export async function sendAccessNotification({
   }
 }
 
+interface NewDeviceAlert {
+  to: string;
+  when: Date;
+}
+
+/**
+ * "New sign-in from an unrecognized device" alert. Same pluggable Resend seam
+ * as sendAccessNotification — a no-op without RESEND_API_KEY. This is a
+ * heads-up only: the login it describes has already succeeded and is never
+ * blocked on this email sending or being read.
+ */
+export async function sendNewDeviceAlert({ to, when }: NewDeviceAlert): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM ?? "Beacon <onboarding@resend.dev>";
+  if (!apiKey || !to) return; // deferred / not configured — no-op
+
+  const whenStr = when.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const html = `
+    <div style="font-family:Helvetica,Arial,sans-serif;max-width:480px;margin:auto">
+      <h2 style="font-family:Georgia,serif;color:#1a1714">New sign-in to your Beacon account</h2>
+      <p style="color:#5b554d;line-height:1.6">
+        Your account was signed into from a device we haven't seen before, on
+        <strong>${whenStr}</strong>.
+      </p>
+      <p style="color:#5b554d;line-height:1.6">
+        If this was you, no action is needed. If you don't recognize this
+        sign-in, change your password right away.
+      </p>
+      <p style="color:#8a8278;font-size:12px">Beacon — a digital health passport.</p>
+    </div>`;
+
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to,
+        subject: "New sign-in to your Beacon account",
+        html,
+      }),
+    });
+  } catch {
+    // Never let a notification failure break the sign-in.
+  }
+}
+
 interface RecordTransfer {
   to: string;
   patientName: string | null;

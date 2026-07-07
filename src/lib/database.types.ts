@@ -190,11 +190,22 @@ export type AuthEventRow = {
   event_type: AuthEventType;
   email: string;
   created_at: string;
+  new_device: boolean;
+  device_id: string | null;
 };
 
 export type AdminAuthLogViewRow = {
   admin_user_id: string;
   last_viewed_at: string;
+};
+
+export type KnownDeviceRow = {
+  id: string;
+  user_id: string;
+  device_id: string;
+  user_agent: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
 };
 
 export interface Database {
@@ -299,6 +310,12 @@ export interface Database {
         Row: AdminAuthLogViewRow;
         Insert: Partial<AdminAuthLogViewRow> & { admin_user_id: string };
         Update: Partial<AdminAuthLogViewRow>;
+        Relationships: [];
+      };
+      known_devices: {
+        Row: KnownDeviceRow;
+        Insert: Partial<KnownDeviceRow> & { user_id: string; device_id: string };
+        Update: Partial<KnownDeviceRow>;
         Relationships: [];
       };
     };

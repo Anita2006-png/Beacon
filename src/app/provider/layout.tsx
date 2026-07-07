@@ -6,6 +6,7 @@ const PROVIDER_NAV: SidebarNavItem[] = [
   { href: "/provider/lookup", label: "Patient lookup", icon: "lookup" },
   { href: "/provider/institution", label: "Institution", icon: "institution" },
   { href: "/provider/verify", label: "Verification", icon: "verify" },
+  { href: "/security", label: "Security", icon: "security" },
 ];
 
 /**

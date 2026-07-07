@@ -1,4 +1,4 @@
-import { KeyRound, LogIn, ShieldAlert, UserPlus } from "lucide-react";
+import { AlertTriangle, KeyRound, LogIn, ShieldAlert, UserPlus } from "lucide-react";
 import { isAdmin } from "@/lib/admin-guard";
 import { getSessionUser } from "@/lib/auth";
 import { markAuthLogViewed } from "@/lib/admin-auth-log";
@@ -201,17 +201,25 @@ export default async function AdminAuthLogPage({
                         {license ?? "—"}
                       </TableCell>
                       <TableCell>
-                        {r.event_type === "signup" ? (
-                          <Badge variant="info">
-                            <UserPlus />
-                            Signup
-                          </Badge>
-                        ) : (
-                          <Badge variant="muted">
-                            <LogIn />
-                            Login
-                          </Badge>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {r.event_type === "signup" ? (
+                            <Badge variant="info">
+                              <UserPlus />
+                              Signup
+                            </Badge>
+                          ) : (
+                            <Badge variant="muted">
+                              <LogIn />
+                              Login
+                            </Badge>
+                          )}
+                          {r.new_device && (
+                            <Badge variant="caution">
+                              <AlertTriangle />
+                              New device
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

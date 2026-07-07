@@ -7,24 +7,35 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { credentialsSchema, signupSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isAdmin } from "@/lib/admin-guard";
+import { recognizeDevice } from "@/lib/device";
+import { sendNewDeviceAlert } from "@/lib/notify";
 import type { AuthEventType } from "@/lib/database.types";
 
 /**
  * Signup/login audit entry. Awaited (not fire-and-forget) so the write
  * completes before the caller's subsequent redirect() throws and the request
  * winds down — but a logging failure never blocks or errors the actual auth
- * flow. Written via the admin client: auth_events has no client policies at
- * all, matching access_logs/admin_actions.
+ * flow. Written via the admin client — auth_events has no client INSERT/
+ * UPDATE/DELETE policy, only a "read your own rows" SELECT policy (for
+ * /security), matching access_logs' own pattern.
  */
 async function logAuthEvent(
   userId: string,
   eventType: AuthEventType,
   email: string,
+  newDevice = false,
+  deviceId: string | null = null,
 ): Promise<void> {
   try {
     await createAdminClient()
       .from("auth_events")
-      .insert({ user_id: userId, event_type: eventType, email });
+      .insert({
+        user_id: userId,
+        event_type: eventType,
+        email,
+        new_device: newDevice,
+        device_id: deviceId,
+      });
   } catch {
     // Never let a logging failure break signup/login.
   }
@@ -109,7 +120,11 @@ export async function signUpAction(
 
   // Admin activity isn't tracked here — only regular accounts.
   if (data.user && !(await isAdmin())) {
-    await logAuthEvent(data.user.id, "signup", parsed.data.email);
+    // Registers this browser as the account's first known device. Every
+    // signup is "new" by definition (nothing to compare against yet), so
+    // this is never flagged or emailed — only later logins act on it.
+    const { deviceId } = await recognizeDevice(data.user.id);
+    await logAuthEvent(data.user.id, "signup", parsed.data.email, false, deviceId);
   }
 
   // Compulsory facility affiliation, captured at signup instead of a later
@@ -181,7 +196,11 @@ export async function signInAction(
 
   // Admin activity isn't tracked here — only regular accounts.
   if (signInData.user && !(await isAdmin())) {
-    await logAuthEvent(signInData.user.id, "login", parsed.data.email);
+    const { isNewDevice, deviceId } = await recognizeDevice(signInData.user.id);
+    await logAuthEvent(signInData.user.id, "login", parsed.data.email, isNewDevice, deviceId);
+    if (isNewDevice) {
+      await sendNewDeviceAlert({ to: parsed.data.email, when: new Date() });
+    }
   }
 
   if (next.startsWith("/")) {

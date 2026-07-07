@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Fingerprint,
   ShieldCheck,
   Users,
   XCircle,
@@ -176,6 +177,12 @@ export default async function InstitutionHomePage() {
                   </Button>
                 </>
               )}
+              <Button asChild variant="outline">
+                <Link href="/security">
+                  <Fingerprint />
+                  Security
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

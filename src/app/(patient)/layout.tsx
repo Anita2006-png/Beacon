@@ -31,6 +31,7 @@ export default async function PatientLayout({
       badge: unread,
     },
     { href: "/access-log", label: "Access log", icon: "access-log" },
+    { href: "/security", label: "Security", icon: "security" },
   ];
 
   return (
